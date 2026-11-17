@@ -398,7 +398,7 @@ function mkEq(id){const d=EQ[id],[a,b]=RAR[d.r].k,n=a+rnd(b-a+1),rolls=[];
  return {id,uid:uidc++,star:1,plus:0,rolls}}
 const DEF={cleared:[],book:{},eqBook:{},inv:[{id:'herb',n:3}],skills:['spin','gale'],lv:1,exp:0,free:0,pts:{hp:0,atk:0,def:0,mp:0,luck:0},eq:null,col:[],stats:{runs:0,deaths:0,kills:0,turns:0,best:0,chests:0,elites:0,synth:0,runs3:0},bossKills:{},bestD:{},opt:{dpad:'right',bgm:5,se:7},chr:0,itBook:{herb:1},store:[],star:{},ach:{},title:''};
 let save=load();
-const VERSION='1.0.0',SAVE_VER=1;
+const VERSION='1.0.2',SAVE_VER=1;
 const DEV=(()=>{try{return location.hash==='#dev'}catch(e){return false}})();
 function load(){let s=null;try{s=JSON.parse(localStorage.getItem('dungeon_rpg_v3'))}catch(e){}
  s=Object.assign(structuredClone(DEF),s||{});s.stats=Object.assign(structuredClone(DEF.stats),s.stats);s.pts=Object.assign(structuredClone(DEF.pts),s.pts);s.opt=Object.assign(structuredClone(DEF.opt),s.opt);
@@ -633,7 +633,15 @@ const STN={short:'短髪',spiky:'ツンツン頭',band:'バンダナ',bald:'ス�
 function comp(head,body){const out=[];for(let i=0;i<16;i++){const hd=head[i]||E16,b=(i>=9?body[i-9]:E16)||E16;let s='';for(let j=0;j<16;j++){const c=hd[j]||'.';s+=c!=='.'?c:(b[j]||'.')}out.push(s)}return out}
 function charSpr(i,bare){const C=CHARS[i],H=HAIR[C.st],B=BODY[C.g],ov=Object.assign({s:'#f2c6a0',r:'#b13e53',y:'#ffcd75'},C.pal);
  const ac=!bare&&save.eq&&ARMC[save.eq.a.id];if(ac){ov.b=ac[0];ov.B=ac[1]}
- return {heroD:mk(comp(H.D,B.D),0,ov),heroU:mk(comp(H.U,B.U),0,ov),heroR:mk(comp(H.R,B.R),0,ov),heroL:mk(comp(H.R,B.R),1,ov)}}
+ const o={heroD:mk(comp(H.D,B.D),0,ov),heroU:mk(comp(H.U,B.U),0,ov),heroR:mk(comp(H.R,B.R),0,ov),heroL:mk(comp(H.R,B.R),1,ov)};
+ for(const f of [1,2])for(const [k,d,fl] of [['D','D',0],['U','U',0],['R','R',0],['L','R',1]])o['hero'+k+f]=mk(comp(H[d],walkBody(C.g,d,f)),fl,ov);
+ return o}
+// 歩くときの足（足を交互に上げる）
+function walkBody(g,d,f){const b=BODY[g][d].slice();
+ const T={m:{D:[["...kBBBkkBBk....","...knnk..kkk...."],["....kBBkkBBBk...","....kkk..knnk..."]],U:[["...kBBBkkBBk....","...knnk..kkk...."],["....kBBkkBBBk...","....kkk..knnk..."]],
+   R:[["...kBBk..kBBk...","..knnk....knnk.."],[".....kBBBBk.....",".....knnnnk....."]]},
+  f:{D:[[null,"...knk...kk....."],[null,".....kk...knk..."]],U:[[null,"...knk...kk....."],[null,".....kk...knk..."]],R:[[null,"..knk.....knk..."],[null,"......knk......."]]}}[g][d][f-1];
+ if(T[0])b[4]=T[0];b[5]=T[1];return b}
 
 function applyChar(){Object.assign(SPR,charSpr(save.chr||0))}
 const pname=()=>save.name||CHARS[save.chr||0].n;
@@ -709,7 +717,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('button');if(b&&!
 /* ---------- 画面 ---------- */
 let scr='home',G=null,P=null;
 function page(title,html,back,keep){const y=$('#subc').scrollTop;$('#subT').textContent=title;$('#subc').innerHTML=html;$('#subBack').onclick=back||(()=>show('home'));if(scr!=='sub')show('sub');$('#subc').scrollTop=keep?y:0}
-function show(id){if(id!=='game'&&G&&!G.over){G.over=true;saveRun()}scr=id;if(id!=='game')playBgm('home');$$('.scr').forEach(e=>e.classList.toggle('on',e.id===id));closeSheet();if(id==='home')renderHome();if(id==='select')renderSelect();if(id==='game')resize()}
+function show(id){if(id!=='sub'){const sc=document.getElementById('subc');if(sc)sc.innerHTML=''}if(id!=='game'&&G&&!G.over){G.over=true;saveRun()}scr=id;if(id!=='game')playBgm('home');$$('.scr').forEach(e=>e.classList.toggle('on',e.id===id));closeSheet();if(id==='home')renderHome();if(id==='select')renderSelect();if(id==='game')resize()}
 $$('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
 $('#goDungeon').onclick=()=>{const r=loadRun();if(r)resumeRun(r);else show('select')};
 const runLocked=()=>{try{return !!localStorage.getItem(RUNKEY)}catch(e){return false}};
@@ -938,9 +946,10 @@ function openStatus(){
   <div class="cgrid">${CHARS.map((C,i)=>`<button class="px cc${i===cur?' on':''}" data-ch="${i}"><img src="${charSpr(i,1).heroD.toDataURL()}" alt=""><span>${C.n}</span><small>${STN[C.st]}</small></button>`).join('')}</div>`;
   if(home)page('キャラクター',`<h3 class="sh3">ステータス</h3>${st}<h3 class="sh3">見た目と名前</h3>${ch}`,null,true);
   else{$('#mbox').innerHTML=`<h3>ステータス　Lv ${save.lv}</h3>${st}`;$('#modal').classList.add('on')}
-  $$('[data-pl]').forEach(b=>b.onclick=()=>{pend[b.dataset.pl]++;draw()});$$('[data-mi]').forEach(b=>b.onclick=()=>{pend[b.dataset.mi]--;draw()});
-  if(!home)$('#sx').onclick=closeModal;
-  $('#sok').onclick=()=>{for(const k in pend){save.pts[k]+=pend[k];save.free-=pend[k];pend[k]=0}persist();if(home)draw();else{closeModal();recalc()}};
+  const R=home?$('#subc'):$('#mbox'),q=s=>R.querySelector(s),qa=s=>[...R.querySelectorAll(s)];
+  qa('[data-pl]').forEach(b=>b.onclick=()=>{pend[b.dataset.pl]++;draw()});qa('[data-mi]').forEach(b=>b.onclick=()=>{pend[b.dataset.mi]--;draw()});
+  if(!home)q('#sx').onclick=closeModal;
+  q('#sok').onclick=()=>{for(const k in pend){save.pts[k]+=pend[k];save.free-=pend[k];pend[k]=0}persist();if(home)draw();else{closeModal();recalc()}};
   if(home){const x=$('#cpv').getContext('2d');['heroD','heroL','heroU','heroR'].forEach((k,j)=>x.drawImage(SPR[k],j*16,0));
    $$('[data-ch]').forEach(b=>b.onclick=()=>{save.chr=+b.dataset.ch;persist();applyChar();draw()});
    const ok=()=>{save.name=$('#pnm').value.replace(/[<>&"]/g,'').trim().slice(0,8);persist();draw();toast(`プレイヤー名：${pname()}`)};
@@ -1007,7 +1016,7 @@ function newFloor(d,f){
  const {m,rooms,roomAt}=genMap();const F=(d-1)*10+f;
  G={d,floor:f,m,rooms,roomAt,en:[],chests:[],items:[],traps:[],events:[],springs:[],kind:{},told:{},turn:G?G.turn:0,log:G?G.log:[],fx:[],
   seen:new Uint8Array(W*H),vis:new Uint8Array(W*H),over:false,interrupt:false,seenEn:new Set(),st:{x:-1,y:-1},proj:[]};
- const start=rnd(rooms.length);const r0=rooms[start];P.x=r0.x+rnd(r0.w);P.y=r0.y+rnd(r0.h);P.dir='down';P.mp=P.mmp;
+ const start=rnd(rooms.length);const r0=rooms[start];P.x=r0.x+rnd(r0.w);P.y=r0.y+rnd(r0.h);P.mt=0;P.dir='down';P.mp=P.mmp;
  const dm=bfs(P.x,P.y);let far=-1,fr=0;
  rooms.forEach((r,i)=>{const dd=dm[r.x+(r.w>>1)+(r.y+(r.h>>1))*W];if(i!==start&&dd>far){far=dd;fr=i}});
  [G.st.x,G.st.y]=freeIn(fr);
@@ -1038,7 +1047,7 @@ function bossFloor(d){
  const roomAt=new Int8Array(W*H).fill(-1);rooms.forEach((r,i)=>{for(let j=r.y;j<r.y+r.h;j++)for(let k=r.x;k<r.x+r.w;k++)roomAt[k+j*W]=i});
  G={d,floor:10,boss:true,m,rooms,roomAt,en:[],chests:[],items:[],traps:[],events:[],springs:[],kind:{},told:{},turn:G?G.turn:0,log:G?G.log:[],fx:[],
   seen:new Uint8Array(W*H),vis:new Uint8Array(W*H),over:false,interrupt:false,seenEn:new Set(),st:{x:-1,y:-1},proj:[]};
- P.x=19;P.y=32;P.dir='up';P.mp=P.mmp;
+ P.x=19;P.y=32;P.mt=0;P.dir='up';P.mp=P.mmp;
  const b=mkEnemy(DUN[d-1].boss,19,9,d*10);b.cd=2;G.en.push(b);
  const it=freeIn(1);G.items.push({x:it[0],y:it[1],k:'it',v:'herb2'});
  decorate();for(let x=12;x<27;x+=3){G.wd[x+4*W]=Object.keys(TH.wd)[0]}arrive(d,10);say('ただならぬ気配がする……');
@@ -1052,7 +1061,7 @@ function loadRun(){try{const r=JSON.parse(localStorage.getItem(RUNKEY));return r
 function resumeRun(r){
  const g=r.G;g.m=g.m.map(s=>Uint8Array.from(s,ch=>+ch));g.roomAt=Int8Array.from(g.roomAt);g.seen=Uint8Array.from(g.seen,ch=>+ch);
  g.vis=new Uint8Array(W*H);g.seenEn=new Set();g.fx=[];g.proj=[];g.over=false;g.interrupt=false;G=g;P=r.P;
- P.flash=P.lunge=P.swing=P.spin=P.gale=-1e4;for(const e of G.en){e.flash=e.lunge=-1e4}
+ P.flash=P.lunge=P.swing=P.spin=P.gale=-1e4;P.mt=0;for(const e of G.en){e.flash=e.lunge=-1e4;e.mt=0}
  setTheme(G.d,G.floor);show('game');updVis();for(const e of G.en)if(G.vis[e.x+e.y*W])G.seenEn.add(e);
  cam.x=P.x;cam.y=P.y;recalc();hud();playBgm(G.boss?'boss':'d'+G.d);
  $('#stairBtn').hidden=!(P.x===G.st.x&&P.y===G.st.y);$('#stairBtn').textContent=G.exit?'✦ 魔法陣で帰還する':'▼ 階段を降りる';
@@ -1166,7 +1175,7 @@ function hitPlayer(e,t,mul=1,ranged=false){
 }
 function lineClear(e,max){if(e.x!==P.x&&e.y!==P.y)return false;const dx=Math.sign(P.x-e.x),dy=Math.sign(P.y-e.y),n=Math.abs(P.x-e.x)+Math.abs(P.y-e.y);
  if(n>max)return false;for(let i=1;i<n;i++){const x=e.x+dx*i,y=e.y+dy*i;if(!walk(x,y)||enemyAt(x,y))return false}return true}
-function moveE(e,[x,y]){e.dir=dirOf(x-e.x,y-e.y);e.x=x;e.y=y}
+function moveE(e,[x,y]){e.dir=dirOf(x-e.x,y-e.y);e.ox=e.x;e.oy=e.y;e.mt=performance.now();e.x=x;e.y=y}
 const cheb=(a,b,c,d)=>Math.max(Math.abs(a-c),Math.abs(b-d));
 function teleCells(e){
  const T=e.type,out=[];const add=(x,y)=>{if(pass(x,y)&&G.roomAt[x+y*W]===0&&!out.some(c=>c[0]===x&&c[1]===y))out.push([x,y])};
@@ -1254,7 +1263,7 @@ function act(type,dir){
   const c=chestAt(nx,ny);if(c){return openChest(c)}
   if(!pass(nx,ny)){if(P.st.conf)endTurn();return}
   if(P.st.frz){say('凍りついて動けない！');return endTurn()}
-  P.x=nx;P.y=ny;P.mp=Math.min(P.mmp,P.mp+1);
+  P.ox=P.x;P.oy=P.y;P.mt=performance.now();P.step=(P.step||0)+1;P.x=nx;P.y=ny;P.mp=Math.min(P.mmp,P.mp+1);
   if(nx===G.st.x&&ny===G.st.y){say('階段を見つけた。');G.interrupt=true}
   const tr=at(G.traps,nx,ny);if(tr)trigger(tr);
   endTurn();
@@ -1313,7 +1322,7 @@ function trigger(tr){
  if(tr.type==='para'){say('麻痺の罠だ！');applySt(P,'para')}
  if(tr.type==='bomb'){const d=10+f;hurt(d);say(`爆発の罠だ！ ${d} のダメージ。`);
   for(const e of [...G.en])if(Math.abs(e.x-P.x)<=1&&Math.abs(e.y-P.y)<=1){e.hp-=d;e.flash=t;fx(e.x,e.y,d,'#ef7d57');if(e.hp<=0)kill(e)}}
- if(tr.type==='tele'){for(let a=0;a<50;a++){const c=freeIn(rnd(G.rooms.length));if(c){P.x=c[0];P.y=c[1];break}}cam.x=P.x;cam.y=P.y;say('転移の罠だ！ どこかへ飛ばされた。')}
+ if(tr.type==='tele'){for(let a=0;a<50;a++){const c=freeIn(rnd(G.rooms.length));if(c){P.x=c[0];P.y=c[1];P.mt=0;break}}cam.x=P.x;cam.y=P.y;say('転移の罠だ！ どこかへ飛ばされた。')}
 }
 function runEvent(ev){
  const done=()=>{G.events=G.events.filter(o=>o!==ev);hud()};
@@ -1495,7 +1504,7 @@ function drawHero(c,x,y,s,dir,t){
  const sword=()=>swordRects(dir,SWL).forEach(([a,b,w,h,col])=>{c.fillStyle=col;const ext=sw?(dir==='left'||dir==='up'?-2:2):0;const horiz=dir==='left'||dir==='right';
   c.fillRect(x+(a+(horiz&&w>1?ext:0))*p,y+(b+(!horiz&&h>1?ext:0))*p,w*p,h*p)});
  if(dir==='up')sword();
- c.drawImage(SPR[{down:'heroD',up:'heroU',right:'heroR',left:'heroL'}[dir]],Math.round(x),Math.round(y),s,s);
+ c.drawImage(SPR[{down:'heroD',up:'heroU',right:'heroR',left:'heroL'}[dir]+(P.wf||'')],Math.round(x),Math.round(y),s,s);
  if(dir!=='up')sword();
 }
 function drawEnemy(c,e,x,y,s,t){
@@ -1549,8 +1558,10 @@ function draw(t){
  for(const ch of G.chests)if(G.vis[ch.x+ch.y*W]){const px=ox+ch.x*s,py=oy+ch.y*s;c.drawImage(SPR[ch.type],px,py,s,s);
   if(ch.locked){c.fillStyle='#d77bea';c.fillRect(px+p*6,py+p*7,p*4,p*4);c.fillStyle='#0f1018';c.fillRect(px+p*7,py+p*8,p*2,p*2)}}
  for(const e of G.en)if(e.tele){const a=RM?.45:.3+.25*Math.abs(Math.sin(t/160));for(const [cx,cy] of e.tele.cells){const px=ox+cx*s,py=oy+cy*s;c.fillStyle=`rgba(255,60,60,${a})`;c.fillRect(px,py,s,s);c.strokeStyle='#ff5a5a';c.lineWidth=2;c.strokeRect(px+2,py+2,s-4,s-4);c.fillStyle='#ffffffcc';c.font=`${Math.round(s*.36)}px DotGothic16,sans-serif`;c.textAlign='center';c.fillText(e.tele.wait,px+s/2,py+s*.62)}}
- for(const e of G.en){if(!G.vis[e.x+e.y*W]||blink(t,e.flash))continue;const [lx,ly]=lungeOff(t,e.lunge,e.dir,s);drawEnemy(c,e,ox+e.x*s+lx,oy+e.y*s+ly,s,t)}
- const [lx,ly]=lungeOff(t,P.lunge,P.dir,s),hx=ox+P.x*s+lx,hy=oy+P.y*s+ly;
+ {const WK=130;for(const e of G.en){if(!G.vis[e.x+e.y*W]||blink(t,e.flash))continue;const [lx,ly]=lungeOff(t,e.lunge,e.dir,s);let ex=e.x,ey=e.y;if(!RM&&e.mt&&t-e.mt<WK&&e.ox!==undefined){const k=(t-e.mt)/WK;ex=e.ox+(e.x-e.ox)*k;ey=e.oy+(e.y-e.oy)*k}drawEnemy(c,e,ox+ex*s+lx,oy+ey*s+ly,s,t)}}
+ const WK=130,mv=(o,tt)=>{if(RM||!o.mt||tt-o.mt>=WK||o.ox===undefined)return [o.x,o.y,0];const k=(tt-o.mt)/WK;return [o.ox+(o.x-o.ox)*k,o.oy+(o.y-o.oy)*k,k]};
+ const [mx,my,mk2]=mv(P,t),bob=mk2>.2&&mk2<.8?-p:0;P.wf=mk2?(P.step%2?1:2):0;
+ const [lx,ly]=lungeOff(t,P.lunge,P.dir,s),hx=ox+mx*s+lx,hy=oy+my*s+ly+bob;
  if(!blink(t,P.flash))drawHero(c,hx,hy,s,P.dir,t);
  if(t-P.spin<260){const q=(t-P.spin)/260;c.fillStyle=`rgba(244,244,244,${1-q})`;for(let a=0;a<12;a++){const ang=a/12*Math.PI*2+q*4;c.fillRect(hx+s/2+Math.cos(ang)*s*1.05-p*2,hy+s/2+Math.sin(ang)*s*1.05-p*2,p*4,p*4)}}
  if(t-P.gale<220){const q=(t-P.gale)/220,[dx,dy]=DIRS[P.dir];c.fillStyle=`rgba(115,239,247,${1-q})`;for(let i=1;i<=3;i++){const cx=hx+s/2+dx*s*i,cy=hy+s/2+dy*s*i;c.fillRect(cx-(dx?s/2:p*2),cy-(dy?s/2:p*2),dx?s:p*4,dy?s:p*4)}}

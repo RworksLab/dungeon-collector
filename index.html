@@ -285,8 +285,21 @@ const RM=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const DUN=[
  {id:1,name:'第1迷宮',theme:'緑の迷宮',foes:'スライム・ゴブリン・キノコ など',boss:'slimeking'},
  {id:2,name:'第2迷宮',theme:'忘れられた遺跡',foes:'ゴーレム・スケルトン・古代兵器 など',boss:'guardian'},
- {id:3,name:'第3迷宮',theme:'深淵の墓地',foes:'ゴースト・ゾンビ・死神 など',boss:'dknight'}];
-const eff=()=>(G.d-1)*10+G.floor;
+ {id:3,name:'第3迷宮',theme:'深淵の墓地',foes:'ゴースト・ゾンビ・死神 など',boss:'dknight'},
+ {id:4,name:'第4迷宮',theme:'灼熱の火山',foes:'ファイアスライム・サラマンダー・ヘルハウンド など',boss:'volcanos'},
+ {id:5,name:'第5迷宮',theme:'天空の神殿',foes:'ホーリーウィスプ・グリフォン・堕天使 など',boss:'astrael'}];
+/* ---------- 終焉の深淵（隠しダンジョン） ---------- */
+const ABY={id:6,name:'終焉の深淵',theme:'果てなき奈落',foes:'全迷宮の魔物＋深淵の魔物',boss:'nihilis',abyss:1};
+const DN=d=>d===6?ABY:DUN[d-1];
+const isAby=()=>!!(G&&G.d===6);
+// 5階層ごとに難易度が1段階上がる。上昇幅は30Fを過ぎると少しずつ小さくなる
+function abyF(f){const s=Math.floor((f-1)/5);let F=46;for(let i=1;i<=s;i++)F+=i<=6?4:Math.max(1.5,4*Math.pow(.88,i-6));return Math.min(250,F)}
+const ABY_FOES=['abslime','sknight','vmage','chimera','deater','phantom','predator','agolem'];
+const ABY_BOSS=['slimeking','guardian','dknight','volcanos','astrael'];
+function abyBoss(f){if(f%50===0)return 'nihilis';const k=f/10-1-Math.floor(f/50);return ABY_BOSS[k%ABY_BOSS.length]}
+const eff=()=>isAby()?Math.round(abyF(G.floor)):(G.d-1)*10+G.floor;
+const bossF=(d,f)=>d===6?f%10===0:f===10;
+const lvF=()=>isAby()?eff():G.d*10;
 const EN={
  slime:{name:'スライム',hp:[14,1.68],atk:[6,0.6],def:[0,.15],xp:4,note:'攻撃を受けると、ときどき分裂する。'},
  goblin:{name:'ゴブリン',hp:[19.6,2.1],atk:[7.5,0.68],def:[1,.2],xp:6,flee:.3,note:'HPが3割を切ると逃げ出す。'},
@@ -309,7 +322,30 @@ const EN={
  drake:{name:'ドレイク',hp:[47.52,2.59],atk:[16.97,0.76],def:[12,.5],xp:30,ranged:5,shotN:'ブレス',shotC:'#ef7d57',inflict:['burn',.3],note:'一直線上に炎のブレスを吐く。'},
  slimeking:{name:'スライムキング',boss:1,hp:[380,0],atk:[22,0],def:[7,0],xp:150,note:'第1迷宮の主。跳び上がってのしかかり、弱ると手下を呼ぶ。'},
  guardian:{name:'古代の守護者',boss:1,hp:[520,0],atk:[30,0],def:[19,0],xp:450,slow:1,note:'第2迷宮の主。十字のレーザーと衝撃波で広範囲を攻撃する。'},
- dknight:{name:'死霊騎士',boss:1,hp:[880,0],atk:[40,0],def:[25,0],xp:1000,note:'第3迷宮の主。突進となぎ払い、連続攻撃を使い分ける。'}};
+ dknight:{name:'死霊騎士',boss:1,hp:[880,0],atk:[40,0],def:[25,0],xp:1000,note:'第3迷宮の主。突進となぎ払い、連続攻撃を使い分ける。'},
+ fslime:{name:'ファイアスライム',hp:[60,2.6],atk:[22,.9],def:[14,.5],xp:40,inflict:['burn',.12],note:'燃える体。触れると火傷を負う。'},
+ salamander:{name:'サラマンダー',hp:[56,2.4],atk:[23,.9],def:[14,.5],xp:42,fast:1,inflict:['burn',.08],note:'すばやく、1ターンに2回動く。火炎の息で火傷を負わせる。'},
+ mgolem:{name:'マグマゴーレム',hp:[80,3],atk:[23,.9],def:[30,.8],xp:48,slow:1,note:'溶岩でできた体。非常に硬いが動きは遅い。'},
+ fbat:{name:'フレイムバット',hp:[48,2.2],atk:[22,.9],def:[12,.5],xp:40,ranged:4,rcd:2,nokite:1,shotN:'火球',shotC:'#ef7d57',erratic:.3,inflict:['burn',.06],note:'飛び回りながら、離れた所から火球を放つ。撃ったあとは1ターン溜めが必要。'},
+ hound:{name:'ヘルハウンド',hp:[62,2.6],atk:[25,1],def:[16,.5],xp:46,fast:1,note:'地獄の猟犬。1ターンに2回動き、一気に距離を詰めてくる。'},
+ ignis:{name:'イグニスナイト',hp:[78,3],atk:[31,1.1],def:[24,.7],xp:55,charge:5,inflict:['burn',.12],note:'炎をまとった騎士。攻撃力が高く、一直線に並ぶと突進してくる。'},
+ hwisp:{name:'ホーリーウィスプ',hp:[70,2.6],atk:[32,1],def:[20,.6],xp:58,ranged:5,rcd:2,nokite:1,shotN:'光弾',shotC:'#fff0b0',erratic:.3,note:'漂う光の霊。離れた所から光弾を放つ。撃ったあとは1ターン溜めが必要。'},
+ griffon:{name:'グリフォン',hp:[84,3],atk:[36,1.1],def:[22,.6],xp:62,fast:1,charge:5,note:'鷲の翼を持つ獣。すばやく、一直線に並ぶと突進してくる。'},
+ seraph:{name:'セラフィム',hp:[76,2.8],atk:[30,1],def:[22,.6],xp:60,healer:1,note:'傷ついた仲間を癒やす天使。先に倒すと戦いやすい。'},
+ minotaur:{name:'ミノタウロス',hp:[120,4],atk:[42,1.2],def:[24,.7],xp:72,note:'牛頭の巨人。体力も攻撃力も高い。'},
+ archguard:{name:'アークガーディアン',hp:[100,3.4],atk:[34,1],def:[38,1],xp:70,slow:1,tough:1,note:'神殿の守護者。受けるダメージを大きく減らす。'},
+ fallen:{name:'堕天使',hp:[80,3],atk:[38,1.1],def:[22,.6],xp:66,inflict:['curse',.3],inflict2:['conf',.2],note:'光を捨てた天使。呪いと混乱を振りまく。'},
+ volcanos:{name:'灼炎竜ヴォルカノス',boss:1,inflict:['burn',.15],hp:[1500,0],atk:[58,0],def:[34,0],xp:2200,note:'第4迷宮の主。炎のブレスと大爆発。体力が減ると攻撃が激しくなる。'},
+ abslime:{name:'アビススライム',hp:[90,3.2],atk:[34,1],def:[18,.6],xp:70,split:.35,note:'深淵に溶けた粘体。攻撃を受けるとよく分裂する。'},
+ sknight:{name:'シャドウナイト',hp:[100,3.4],atk:[46,1.3],def:[26,.7],xp:78,note:'影から生まれた騎士。攻撃力が非常に高い。'},
+ vmage:{name:'虚無の魔術師',hp:[70,2.6],atk:[34,1],def:[20,.6],xp:72,ranged:5,rcd:2,nokite:1,rinf:.3,shotN:'虚無の魔弾',shotC:'#d77bea',note:'離れた所から魔弾を放つ。当たるとさまざまな状態異常になることがある。'},
+ chimera:{name:'キメラ',hp:[110,3.6],atk:[40,1.15],def:[24,.7],xp:80,charge:5,inflict:['burn',.15],inflict2:['poison',.2],note:'獅子と竜と蛇の合成獣。突進し、火傷と毒を与えてくる。'},
+ deater:{name:'デスイーター',hp:[96,3.2],atk:[38,1.1],def:[22,.6],xp:76,drain:.6,note:'命を喰らう魔物。与えたダメージでHPを回復する。'},
+ phantom:{name:'ファントム',hp:[72,2.6],atk:[36,1.05],def:[18,.5],xp:74,eva:.45,blink:.35,erratic:.2,note:'攻撃をよくかわし、斬られると別の場所へ姿を移すことがある。'},
+ predator:{name:'深淵の捕食者',hp:[88,3],atk:[38,1.1],def:[20,.6],xp:76,fast:1,track:1,note:'獲物をどこまでも追いかける。1ターンに2回動く。'},
+ agolem:{name:'アビスゴーレム',hp:[130,4],atk:[36,1],def:[50,1.4],xp:82,slow:1,note:'深淵の岩でできた巨人。防御力が極めて高い。'},
+ nihilis:{name:'終焉の王ニヒリス',boss:1,hp:[2800,0],atk:[72,0],def:[44,0],xp:4000,note:'虚無を統べる深淵の王。虚無の十字・崩壊の波・終焉の刻を使い分け、弱ると深淵の魔物を呼ぶ。'},
+ astrael:{name:'天界の審判者アストラエル',boss:1,hp:[2000,0],atk:[66,0],def:[40,0],xp:3200,note:'第5迷宮の主。光の剣と光弾、光の格子。体力が減ると翼を広げ、攻撃範囲が広がる。'}};
 const NORMAL=['slime','goblin','mush','bat','archer','boar'];
 const SK={
  spin:{name:'回転斬り',mp:4,desc:'周囲8マスの敵すべてを攻撃（威力0.8倍）'},
@@ -318,13 +354,17 @@ const SK={
  kama:{name:'かまいたち',mp:3,desc:'正面5マス先までの最初の敵に遠距離攻撃（0.9倍）'},
  guard:{name:'鉄壁の構え',mp:3,desc:'次に受けるダメージを60%軽減（10ターン有効）'},
  counter:{name:'カウンター',mp:4,desc:'次に受ける近接攻撃に反撃する（10ターン有効）'},
- warp:{name:'瞬間移動',mp:4,desc:'正面に最大3マス、敵を飛び越えて移動'}};
+ warp:{name:'瞬間移動',mp:4,desc:'正面に最大3マス、敵を飛び越えて移動'},
+ barrier:{name:'聖なる結界',mp:6,noBook:1,desc:'このターンに受ける敵の攻撃（ボスの大技も含む）と火炎噴出口・溶岩のダメージを無効化する'}};
 const STS={poison:{n:'毒',c:'#d77bea',d:6},para:{n:'麻痺',c:'#ffcd75',d:3},sleep:{n:'睡眠',c:'#41a6f6',d:5},conf:{n:'混乱',c:'#ef7d57',d:5},burn:{n:'火傷',c:'#ff5a5a',d:4},frz:{n:'凍結',c:'#73eff7',d:3},curse:{n:'呪い',c:'#8d5dbd',d:12}};
 // cat: 回復/攻撃/妨害/探索・特殊　tg: self=自分 / front=正面に投げる / around=周囲8マス / room=見えている敵すべて
 const IT={
  herb:{name:'薬草',cat:'回復',tg:'self',desc:'HPを25回復',hp:25},
  herb2:{name:'上質な薬草',cat:'回復',tg:'self',desc:'HPを50回復',hp:50},
+ herb3:{name:'秘薬草',cat:'回復',tg:'self',desc:'HPを100回復',hp:100},
+ herb4:{name:'世界樹の葉',cat:'回復',tg:'self',desc:'HPを200回復',hp:200},
  potion:{name:'ヒールポーション',cat:'回復',tg:'self',desc:'最大HPの30%を回復',pct:.3},
+ potion2:{name:'ハイポーション',cat:'回復',tg:'self',desc:'最大HPの50%を回復',pct:.5},
  elixir:{name:'エリクサー',cat:'回復',tg:'self',desc:'HPを全回復',pct:1},
  panacea:{name:'万能薬',cat:'回復',tg:'self',desc:'HPを50%回復し、状態異常をすべて治す',pct:.5,cure:1},
  fire:{name:'火炎瓶',cat:'攻撃',tg:'front',desc:'当たった敵に18ダメージ＋火傷',dmg:18,st:'burn'},
@@ -343,7 +383,7 @@ const IT={
  clover:{name:'幸運の四つ葉',cat:'探索・特殊',tg:'self',desc:'次に開ける宝箱の中身が良くなる'},
  sight:{name:'千里眼の巻物',cat:'探索・特殊',tg:'self',desc:'このフロアの敵と宝箱の位置が地図に表示される'}};
 const ITW={herb:12,herb2:6,potion:5,elixir:1,panacea:3,fire:4,knife:5,ice:3,bomb:3,thunder:2,sleepg:4,parab:3,confp:3,poisb:4,curset:2,ether:6,mapsc:3,trapd:3,clover:2,sight:2};
-const RAR=[{n:'コモン',c:'#94b0c2',k:[0,0]},{n:'アンコモン',c:'#a7f070',k:[0,1]},{n:'レア',c:'#41a6f6',k:[1,1]},{n:'エピック',c:'#d77bea',k:[1,2]},{n:'レジェンダリー',c:'#ffcd75',k:[2,3]}];
+const RAR=[{n:'コモン',c:'#94b0c2',k:[0,0]},{n:'アンコモン',c:'#a7f070',k:[0,1]},{n:'レア',c:'#41a6f6',k:[1,1]},{n:'エピック',c:'#d77bea',k:[1,2]},{n:'レジェンダリー',c:'#ffcd75',k:[2,3]},{n:'アビサル',c:'#ff6b9a',k:[3,3]}];
 const ABI={crit:{n:'クリティカル率',u:'%',r:[3,8]},steal:{n:'HP吸収',u:'%',r:[3,8]},extra:{n:'追加攻撃',u:'%',r:[5,12]},onkill:{n:'撃破時HP回復',u:'',r:[1,4]},
  red:{n:'被ダメージ軽減',u:'%',r:[3,8]},eva:{n:'回避率',u:'%',r:[3,8]},refl:{n:'ダメージ反射',u:'%',r:[5,15]},mhp:{n:'最大HP',u:'',r:[5,15]},
  drop:{n:'ドロップ率',u:'%',r:[5,15]},mmp:{n:'最大MP',u:'',r:[2,4]},pois:{n:'毒付与',u:'%',r:[8,20]},res:{n:'状態異常耐性',u:'%',r:[10,25]}};
@@ -386,9 +426,29 @@ const EQ={
  a_banshee:{n:'嘆きのヴェール',t:'a',r:3,v:18,f:99,src:'banshee',u:{res:30,mmp:6}},w_reaper:{n:'死神の鎌刃',t:'w',r:4,v:30,f:99,src:'reaper',u:{crit:15,onkill:6}},w_drake:{n:'竜牙の剣',t:'w',r:4,v:32,f:99,src:'drake',u:{extra:15}},a_drake:{n:'竜鱗の鎧',t:'a',r:4,v:26,f:99,src:'drake',u:{red:15}},
  w_slimeking:{n:'キングスライムソード',t:'w',r:4,v:12,f:99,src:'slimeking',u:{onkill:6,extra:10}},a_slimeking:{n:'スライム王の衣',t:'a',r:4,v:8,f:99,src:'slimeking',u:{red:12,mhp:30}},
  w_guardian:{n:'守護者の大剣',t:'w',r:4,v:26,f:99,src:'guardian',u:{crit:15,refl:10}},a_guardian:{n:'守護者の甲冑',t:'a',r:4,v:24,f:99,src:'guardian',u:{red:15,refl:20}},
- w_dknight:{n:'死霊騎士の魔剣',t:'w',r:4,v:40,f:99,src:'dknight',u:{steal:10,extra:15}},a_dknight:{n:'死霊騎士の鎧',t:'a',r:4,v:32,f:99,src:'dknight',u:{red:15,res:30}}};
+ w_dknight:{n:'死霊騎士の魔剣',t:'w',r:4,v:40,f:99,src:'dknight',u:{steal:10,extra:15}},a_dknight:{n:'死霊騎士の鎧',t:'a',r:4,v:32,f:99,src:'dknight',u:{red:15,res:30}},
+ w_lava:{n:'溶岩の剣',t:'w',r:0,v:26,f:31,fire:1},w_flame:{n:'炎刃',t:'w',r:1,v:29,f:32,fire:1},w_magma:{n:'マグマブレード',t:'w',r:2,v:32,f:34,fire:1,u:{crit:8}},w_inferno:{n:'インフェルノ',t:'w',r:3,v:36,f:36,fire:1,u:{extra:12}},w_phoenix:{n:'不死鳥の剣',t:'w',r:4,v:42,f:38,fire:1,u:{steal:10,onkill:8}},
+ a_lava:{n:'火山岩の鎧',t:'a',r:0,v:22,f:31,fire:1},a_flame:{n:'耐火の革鎧',t:'a',r:1,v:24,f:32,fire:1},a_magma:{n:'マグマメイル',t:'a',r:2,v:27,f:34,fire:1,u:{red:6}},a_inferno:{n:'炎帝の鎧',t:'a',r:3,v:30,f:36,fire:1,u:{refl:15}},a_phoenix:{n:'不死鳥の羽衣',t:'a',r:4,v:35,f:38,fire:1,u:{mhp:50,red:12}},
+ w_sky:{n:'天空の剣',t:'w',r:0,v:34,f:41},w_cloud:{n:'雲斬り',t:'w',r:1,v:37,f:42},w_angel:{n:'天使の剣',t:'w',r:2,v:41,f:44,u:{crit:10}},w_divine:{n:'神剣',t:'w',r:3,v:46,f:46,u:{extra:15}},w_heaven:{n:'天上の聖剣',t:'w',r:4,v:52,f:48,u:{crit:18,steal:8}},
+ a_sky:{n:'天空の鎧',t:'a',r:0,v:29,f:41},a_cloud:{n:'雲の羽衣',t:'a',r:1,v:31,f:42,u:{eva:5}},a_angel:{n:'天使の鎧',t:'a',r:2,v:35,f:44,u:{res:20}},a_divine:{n:'神衣',t:'a',r:3,v:38,f:46,u:{mmp:10,red:8}},a_heaven:{n:'天上の鎧',t:'a',r:4,v:44,f:48,u:{red:15,refl:15}},
+ w_fslime:{n:'炎ゼリーの剣',t:'w',r:2,v:30,f:99,src:'fslime',fire:1,u:{onkill:6}},a_salamander:{n:'サラマンダーの鱗鎧',t:'a',r:3,v:28,f:99,src:'salamander',fire:1,u:{res:25}},
+ a_mgolem:{n:'溶岩石の鎧',t:'a',r:3,v:32,f:99,src:'mgolem',fire:1,u:{red:12}},w_fbat:{n:'火蝙蝠の短剣',t:'w',r:2,v:31,f:99,src:'fbat',fire:1,u:{extra:12}},
+ w_hound:{n:'獄犬の牙',t:'w',r:3,v:36,f:99,src:'hound',fire:1,u:{crit:12}},w_ignis:{n:'イグニスブレード',t:'w',r:4,v:44,f:99,src:'ignis',fire:1,u:{extra:12,crit:10}},
+ a_hwisp:{n:'光霊のローブ',t:'a',r:3,v:32,f:99,src:'hwisp',u:{mmp:10,res:20}},a_griffon:{n:'鷲獅子のマント',t:'a',r:3,v:34,f:99,src:'griffon',u:{eva:12}},
+ w_seraph:{n:'熾天使の剣',t:'w',r:3,v:44,f:99,src:'seraph',u:{steal:10}},w_minotaur:{n:'牛魔の大剣',t:'w',r:4,v:52,f:99,src:'minotaur',u:{crit:15}},
+ a_archguard:{n:'守護天使の鎧',t:'a',r:4,v:42,f:99,src:'archguard',u:{red:15,refl:10}},w_fallen:{n:'堕天の剣',t:'w',r:4,v:50,f:99,src:'fallen',u:{steal:12,pois:20}},
+ w_draco:{n:'ドラコ',t:'w',r:4,v:50,f:99,src:'volcanos',fire:1,u:{crit:15,extra:15}},a_flare:{n:'フレア',t:'a',r:4,v:40,f:99,src:'volcanos',fire:1,u:{red:15,mhp:60}},w_volcanos:{n:'ヴォルカノス',t:'w',r:4,v:56,f:99,src:'volcanos',fire:1,u:{crit:20,onkill:10}},
+ w_lux:{n:'ルクス',t:'w',r:4,v:62,f:99,src:'astrael',u:{crit:20,steal:10}},a_celes:{n:'セレス',t:'a',r:4,v:48,f:99,src:'astrael',u:{red:18,res:30}},a_arcana:{n:'アルカナ',t:'a',r:4,v:46,f:99,src:'astrael',u:{eva:15,mmp:15}},
+ w_void:{n:'虚空の剣',t:'w',r:2,v:58,f:60,aby:1,u:{crit:10}},w_nether:{n:'冥界の剣',t:'w',r:3,v:63,f:60,aby:1,u:{extra:15}},w_oblivion:{n:'忘却の剣',t:'w',r:4,v:70,f:60,aby:1,u:{crit:18,steal:10}},w_eclipse:{n:'エクリプス',t:'w',r:5,v:78,f:60,aby:1,u:{crit:20,extra:15}},
+ a_void:{n:'虚空の鎧',t:'a',r:2,v:46,f:60,aby:1,u:{res:20}},a_nether:{n:'冥界の鎧',t:'a',r:3,v:50,f:60,aby:1,u:{red:10}},a_oblivion:{n:'忘却の鎧',t:'a',r:4,v:55,f:60,aby:1,u:{red:15,mhp:60}},a_eclipse:{n:'エクリプスメイル',t:'a',r:5,v:62,f:60,aby:1,u:{red:18,refl:15}},
+ w_ragna:{n:'ラグナロク',t:'w',r:5,v:84,f:99,aby:1,abyB:1,u:{crit:22,steal:12}},a_ragna:{n:'黄昏の鎧',t:'a',r:5,v:66,f:99,aby:1,abyB:1,u:{red:20,mhp:80}},
+ a_abslime:{n:'深淵ゼリーの衣',t:'a',r:4,v:52,f:99,src:'abslime',u:{mhp:60,onkill:6}},w_sknight:{n:'影の剣',t:'w',r:4,v:68,f:99,src:'sknight',u:{crit:18}},
+ a_vmage:{n:'虚無のローブ',t:'a',r:4,v:50,f:99,src:'vmage',u:{mmp:15,res:30}},w_chimera:{n:'キメラの爪',t:'w',r:4,v:66,f:99,src:'chimera',u:{pois:20,extra:12}},
+ w_deater:{n:'喰らう刃',t:'w',r:4,v:64,f:99,src:'deater',u:{steal:15}},a_phantom:{n:'幻影の外套',t:'a',r:4,v:50,f:99,src:'phantom',u:{eva:15}},
+ w_predator:{n:'捕食者の牙',t:'w',r:4,v:67,f:99,src:'predator',u:{extra:15,crit:10}},a_agolem:{n:'深淵岩の鎧',t:'a',r:4,v:58,f:99,src:'agolem',u:{red:18}},
+ w_nihil:{n:'ニヒル',t:'w',r:5,v:88,f:99,src:'nihilis',u:{crit:22,extra:18}},w_endless:{n:'エンドレス',t:'w',r:5,v:86,f:99,src:'nihilis',u:{steal:15,onkill:10}},a_nihil:{n:'虚無の聖衣',t:'a',r:5,v:68,f:99,src:'nihilis',u:{red:20,res:40}}};
 const STATS=[['hp','最大HP',5],['atk','攻撃力',1],['def','防御力',1],['mp','最大MP',2],['luck','運',1]];
-const ROOMN={treasure:'宝物庫',house:'モンスターハウス',heal:'回復の間',trial:'試練の間'};
+const ROOMN={treasure:'宝物庫',house:'モンスターハウス',heal:'回復の間',trial:'試練の間',firevault:'炎の宝物庫',seal:'封印の祭壇',phantom:'幻影の部屋',mystic:'神秘の宝物庫'};
 const SLOTS=8,STACK=5;
 
 /* ---------- セーブ ---------- */
@@ -398,7 +458,7 @@ function mkEq(id){const d=EQ[id],[a,b]=RAR[d.r].k,n=a+rnd(b-a+1),rolls=[];
  return {id,uid:uidc++,star:1,plus:0,rolls}}
 const DEF={cleared:[],book:{},eqBook:{},inv:[{id:'herb',n:3}],skills:['spin','gale'],lv:1,exp:0,free:0,pts:{hp:0,atk:0,def:0,mp:0,luck:0},eq:null,col:[],stats:{runs:0,deaths:0,kills:0,turns:0,best:0,chests:0,elites:0,synth:0,runs3:0},bossKills:{},bestD:{},opt:{dpad:'right',bgm:5,se:7},chr:0,itBook:{herb:1},store:[],star:{},ach:{},title:''};
 let save=load();
-const VERSION='1.0.2',SAVE_VER=1;
+const VERSION='1.1.0',SAVE_VER=1;
 const DEV=(()=>{try{return location.hash==='#dev'}catch(e){return false}})();
 function load(){let s=null;try{s=JSON.parse(localStorage.getItem('dungeon_rpg_v3'))}catch(e){}
  s=Object.assign(structuredClone(DEF),s||{});s.stats=Object.assign(structuredClone(DEF.stats),s.stats);s.pts=Object.assign(structuredClone(DEF.pts),s.pts);s.opt=Object.assign(structuredClone(DEF.opt),s.opt);
@@ -410,7 +470,7 @@ const need=lv=>Math.round(12*lv**1.4);
 const eqVal=i=>Math.round(EQ[i.id].v*(1+.5*(i.star-1)))+i.plus;
 function abil(k){let s=0;for(const i of [save.eq.w,save.eq.a]){const u=EQ[i.id].u;if(u&&u[k])s+=u[k];for(const [a,v] of i.rolls)if(a===k)s+=v}return s}
 function calc(){const p=save.pts;return {mhp:60+p.hp*5+abil('mhp'),mmp:10+p.mp*2+abil('mmp'),atk:8+p.atk+eqVal(save.eq.w),def:3+p.def+eqVal(save.eq.a),luck:p.luck}}
-function recalc(){applyChar();if(!P)return;const c=calc(),dh=c.mhp-P.mhp;Object.assign(P,c);P.atk+=P.buff;if(dh>0)P.hp+=dh;P.hp=Math.min(P.hp,P.mhp);P.mp=Math.min(P.mp,P.mmp);hud()}
+function recalc(){applyChar();if(!P)return;const c=calc(),dh=c.mhp-P.mhp;Object.assign(P,c);P.atk+=P.buff;P.def+=P.dbuff||0;if(dh>0)P.hp+=dh;P.hp=Math.min(P.hp,P.mhp);P.mp=Math.min(P.mp,P.mmp);hud()}
 function addItem(id){save.itBook[id]=1;const s=save.inv.find(x=>x.id===id&&x.n<STACK);if(s){s.n++;return true}if(save.inv.length<SLOTS){save.inv.push({id,n:1});return true}return false}
 
 /* ---------- ドット絵 ---------- */
@@ -448,6 +508,22 @@ bagI:["","","","","......kkkk......",".....kyyyyk.....","......kkkk......","....
 function mk(rows,flip,ov){const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');const pal=Object.assign({},PAL,ov);
  rows.forEach((r,y)=>[...r].forEach((ch,i)=>{if(pal[ch]&&ch!=='.'){x.fillStyle=pal[ch];x.fillRect(flip?15-i:i,y,1,1)}}));return c}
 const SPR={};for(const k in ART)SPR[k]=mk(ART[k]);SPR.boarR=mk(ART.boar,1);SPR.archer=mk(ART.goblin,0,{n:'#257179',N:'#1a3a3f',g:'#7cb342'});
+Object.assign(ART,{
+ salamander:["","","","","..........kkk...",".........kroek..","..kk.....krrrrk.",".kook..kkrrrrk..",".kroorkkrrrrrk..","..krrrrrrrrrk...","...krroorrrk....","..kokkrkkrokk...","..kk..k..kk.....","","",""],
+ hound:["","","","","..k.........kk..",".kdk.......kddk.",".kddkkkkkkkdedk.",".kddddddddddddk.",".kddddddddddkkk.","..kddddddddk....","..kdddddddddk...","..kdk.kdk.kdk...","..kok.kok.kok...","..kk..kk..kk....","",""],
+ seraph:["","","kk...kkkkk...kk.","kwk.kyyyyyk.kwk.","kwwkkssssskkwwk.",".kwwksksskskwwk.","..kwkssssskkwk..","...kwwwwwwwk....","..kwwwwwwwwwk...","..kwwwyywwwwk...","...kwwwwwwwk....","....kwwwwwk.....",".....kkkkk......","","",""],
+ minotaur:["","..k..........k..",".kck........kck.","..kckkkkkkkkck..","...kNNNNNNNNk...","...kNeNNNNeNk...","...kNNNNNNNNk...","....kNkccNkNk...","....kNNNNNNk....","..kkNNnnnnNNkk..",".kNNkNnnnnNkNNk.",".kNkkNNNNNNkkNk.","..k.kNNkkNNk.k..","....kcck.kcck...","....kkk...kkk...",""]});
+SPR.salamander=mk(ART.salamander);SPR.hound=mk(ART.hound);SPR.seraph=mk(ART.seraph);SPR.minotaur=mk(ART.minotaur);
+SPR.fslime=mk(ART.slime,0,{g:'#ef7d57',l:'#ffcd75',G:'#b13e53'});SPR.mgolem=mk(ART.golem,0,{S:'#4a2a2a',d:'#1a1010',a:'#ef7d57',u:'#ffb347',t:'#ffe08a'});
+SPR.fbat=mk(ART.bat,0,{R:'#ef7d57',e:'#ffcd75'});SPR.ignis=mk(ART.dknight,0,{R:'#b13e53',d:'#5d3a1a',p:'#ffcd75',w:'#ffb347'});
+SPR.hwisp=mk(ART.wisp,0,{u:'#ffcd75',t:'#fff6d0'});SPR.griffon=mk(ART.gargoyle,0,{a:'#ffcd75',S:'#c9a46a',e:'#41a6f6'});
+SPR.archguard=mk(ART.guardian,0,{a:'#ffffff',S:'#c2d3dd',u:'#ffcd75',t:'#fff0b0'});SPR.fallen=mk(ART.seraph,0,{w:'#5d275d',y:'#8d5dbd',s:'#c2d3dd'});
+SPR.volcanos=mk(ART.drake,0,{r:'#8a1e2e',o:'#ffb347',e:'#ffcd75',k:'#1a0808'});SPR.astrael=mk(ART.seraph,0,{w:'#fff6d0',y:'#ffcd75',k:'#3a2a10'});
+SPR.abslime=mk(ART.slime,0,{g:'#5d275d',l:'#d77bea',G:'#2a1438',w:'#f4b5ff'});SPR.sknight=mk(ART.dknight,0,{R:'#4a5a8a',d:'#262b44',p:'#8d5dbd',w:'#c2d3dd',e:'#ff5a5a'});
+SPR.vmage=mk(ART.banshee,0,{p:'#5d3f8a',P:'#3a2a5a',w:'#d77bea'});SPR.chimera=mk(ART.drake,0,{r:'#c9a46a',o:'#38b764',e:'#ff5a5a'});
+SPR.deater=mk(ART.reaper,0,{d:'#8a2a44',w:'#ff6b9a',e:'#ffcd75',a:'#b13e53'});SPR.phantom=mk(ART.ghost,0,{w:'#b8b0d8',a:'#6c6488',k:'#1a1626'});
+SPR.predator=mk(ART.hound,0,{d:'#6c5a9a',e:'#ff5a5a',o:'#d77bea'});SPR.agolem=mk(ART.golem,0,{S:'#5a4f80',d:'#2a2438',a:'#d77bea',u:'#8d5dbd',t:'#f4b5ff'});
+SPR.nihilis=mk(ART.dknight,0,{R:'#8d5dbd',d:'#2a1438',p:'#ff6b9a',w:'#f4b5ff',e:'#ffffff',k:'#05040a'});
 SPR.wood=mk(CHEST);SPR.iron=mk(CHEST,0,{n:'#94b0c2',N:'#566c86',y:'#333c57'});SPR.gold=mk(CHEST,0,{n:'#ffcd75',N:'#ef7d57',y:'#f4f4f4'});
 function tileCanvas(fn){const c=document.createElement('canvas');c.width=c.height=16;const x=c.getContext('2d');const p=(col,a,b,w=1,h=1)=>{x.fillStyle=col;x.fillRect(a,b,w,h)};fn(p);return c}
 /* ---------- 景色（迷宮×前半/後半） ---------- */
@@ -462,6 +538,18 @@ const THEME={
   props:{brazier:2,statue:2,gurn:2},wd:{sconce:1},pt:{c:'#73eff7',vx:0,vy:-.15,n:18,glow:1},amb:'rgba(20,30,90,.15)'},
  '3a':{name:'夜の墓地',fl:['#3d3a3a','#302d2e','#4a4646','#5a4a3a'],dc:['#566c86','#7a6a4a','#94b0c2'],wl:['#2a2630','#4e4866','#6c6488'],cp:['#1a1c2c','#3a3550','#566c86'],tp:['#121018','#1a1722'],
   props:{grave:3,stump:2,skull:2,candle:2,dtuft:3},wd:{candlew:1},pt:{c:'#94b0c2',vx:.2,vy:0,n:14,big:1},amb:'rgba(40,40,90,.2)'},
+ '4a':{name:'火山の洞窟',fl:['#3a2a2a','#2a1e1e','#4a3434','#ef7d57'],crack:1,dc:['#ef7d57','#ffcd75','#5d3a3a'],wl:['#2a1a1a','#5d3a3a','#7a4a3a'],cp:['#1a1010','#b13e53','#ef7d57'],tp:['#120a0a','#1e1212'],
+  props:{mrock:4,fcrystal:2,skull:1,bones:1},wd:{torch:1},pt:{c:'#ef7d57',vx:0,vy:-.3,n:20,glow:1},amb:'rgba(120,30,10,.12)'},
+ '4b':{name:'溶岩の深奥',fl:['#2e1a1a','#221212','#3e2424','#ef7d57'],grid:1,crack:1,dc:['#ef7d57','#ffcd75','#b13e53'],wl:['#1e1010','#4a2a2a','#6a3a2a'],cp:['#120a0a','#ef7d57','#ffcd75'],tp:['#0a0606','#140c0c'],
+  props:{mrock:3,fcrystal:3,brazier:1},wd:{torch:1},pt:{c:'#ffb347',vx:.1,vy:-.5,n:28,glow:1},amb:'rgba(150,40,10,.18)'},
+ '5a':{name:'雲上の回廊',fl:['#dfe8f2','#c2d3dd','#f4f8fc','#94b0c2'],grid:1,dc:['#ffcd75','#94b0c2','#41a6f6'],wl:['#94b0c2','#e6eef6','#ffffff'],cp:['#41a6f6','#73c8f7','#ffffff'],tp:['#5c8ec2','#6c9ed2'],
+  props:{cloud:4,wcolumn:2,flower:1},wd:{sconce:1},pt:{c:'#ffffff',vx:.25,vy:0,n:14,big:1}},
+ '5b':{name:'光の聖域',fl:['#f4ead2','#e6d3a3','#fff6e0','#ffcd75'],grid:1,gold:1,dc:['#ffcd75','#41a6f6','#ffffff'],wl:['#c9b48f','#f4ead2','#ffffff'],cp:['#e0a93a','#ffcd75','#ffffff'],tp:['#3a5a8a','#4a6a9a'],
+  props:{wstatue:2,gcrystal:2,wcolumn:2,gurn:1},wd:{sconce:1},pt:{c:'#ffcd75',vx:0,vy:-.2,n:20,glow:1}},
+ '6a':{name:'虚無の回廊',fl:['#1c1826','#15121e','#262036','#8d5dbd'],grid:1,crack:1,dc:['#d77bea','#8d5dbd','#ff6b9a'],wl:['#0f0c16','#2a2438','#3f3654'],cp:['#1a1626','#5d275d','#d77bea'],tp:['#05040a','#0c0a12'],
+  props:{vcrystal:3,obelisk:2,bones:1,skull:1},wd:{psconce:1},pt:{c:'#d77bea',vx:0,vy:-.25,n:24,glow:1},amb:'rgba(60,10,80,.25)'},
+ '6b':{name:'終焉の深奥',fl:['#1a1014','#120a0e','#26161c','#ff6b9a'],grid:1,crack:1,dc:['#ff6b9a','#b13e53','#f4b5ff'],wl:['#0c0608','#2a1420','#3f1e2c'],cp:['#120a0e','#b13e53','#ff6b9a'],tp:['#040203','#0a0507'],
+  props:{rcrystal:3,obelisk:2,skull:2},wd:{psconce:1},pt:{c:'#ff6b9a',vx:.05,vy:-.4,n:28,glow:1},amb:'rgba(90,10,40,.25)'},
  '3b':{name:'深淵の地下墓所',fl:['#2a2438','#211c2c','#352e47','#5d275d'],grid:1,crack:1,dc:['#d77bea','#8d5dbd','#5d275d'],wl:['#1c1826','#3f3654','#574b73'],cp:['#2a2438','#5d275d','#d77bea'],tp:['#0c0a12','#14111c'],
   props:{bones:3,skull:2,crystal:2,coffin:1},wd:{skullw:2,psconce:1},pt:{c:'#d77bea',vx:0,vy:-.35,n:20,glow:1},amb:'rgba(70,20,90,.2)'}};
 const PROPART={
@@ -487,9 +575,13 @@ const PROPART={
  crystal:["","","","",".......k........","......kpk.......","......kpk..k....",".....kpwpk.kpk..",".....kppPk.kpk..","..k..kppPk.kpPk.",".kpk.kppPk.kpPk.",".kpPkkppPkkppPk.","kkkkkkkkkkkkkkk.","","",""],
  coffin:["","","","",".....kkkkk......","....kNnnnNk.....","...kNnnnnnNk....","...kNnnynnNk....","...kNnyyynNk....","...kNnnynnNk....","...kNnnynnNk....","....kNnnnNk.....",".....kNnNk......","......kkk.......","",""]};
 const PROP={};
-const TALL={bush:1,column:1,statue:1,grave:1,stump:1,brazier:1,crystal:1,coffin:1,log:1};
-const LIGHT={gshroom:'#73eff7',brazier:'#ffb347',candle:'#ffcd75',crystal:'#d77bea'};
-function buildProps(){for(const k in PROPART)PROP[k]=mk(PROPART[k]);PROP.gurn=mk(PROPART.urn,0,{n:'#ffcd75',N:'#e0a93a',y:'#f4f4f4'});PROP.dtuft=mk(PROPART.tuft,0,{g:'#7a6a4a',l:'#a08a5a'})}
+const TALL={vcrystal:1,rcrystal:1,obelisk:1,wcolumn:1,wstatue:1,fcrystal:1,gcrystal:1,bush:1,column:1,statue:1,grave:1,stump:1,brazier:1,crystal:1,coffin:1,log:1};
+const LIGHT={vcrystal:'#d77bea',rcrystal:'#ff6b9a',fcrystal:'#ef7d57',gcrystal:'#ffcd75',gshroom:'#73eff7',brazier:'#ffb347',candle:'#ffcd75',crystal:'#d77bea'};
+PROPART.cloud=["","","","","","","","","......kkkk......","..kkkkwwwwkkk...",".kwwwwwwwwwwwk..","kwwwwwwwwwwwwwk.","kwwwwwwwwwaawwk.",".kkaaaaaaaaakk..","..kkkkkkkkkk....",""];
+function buildProps(){for(const k in PROPART)PROP[k]=mk(PROPART[k]);
+ PROP.mrock=mk(PROPART.rock,0,{a:'#7a4a3a',S:'#4a2a2a',d:'#2a1414'});PROP.fcrystal=mk(PROPART.crystal,0,{p:'#ef7d57',P:'#b13e53',w:'#ffcd75'});
+ PROP.wcolumn=mk(PROPART.column,0,{q:'#f4f8fc',Q:'#c2d3dd'});PROP.wstatue=mk(PROPART.statue,0,{a:'#fff6e0',S:'#e6d3a3',d:'#c9a46a'});PROP.gcrystal=mk(PROPART.crystal,0,{p:'#ffcd75',P:'#e0a93a',w:'#fff6d0'});PROP.gurn=mk(PROPART.urn,0,{n:'#ffcd75',N:'#e0a93a',y:'#f4f4f4'});PROP.dtuft=mk(PROPART.tuft,0,{g:'#7a6a4a',l:'#a08a5a'});
+ PROP.vcrystal=mk(PROPART.crystal,0,{p:'#b48ae0',P:'#5d275d',w:'#f4b5ff'});PROP.rcrystal=mk(PROPART.crystal,0,{p:'#ff6b9a',P:'#b13e53',w:'#ffd0e0'});PROP.obelisk=mk(PROPART.column,0,{q:'#2a2438',Q:'#0f0c16'})}
 function makeTiles(T){
  const sp=(p,c,n)=>{for(let i=0;i<n;i++)p(c,rnd(16),rnd(16))};
  const grid=p=>{p(T.fl[1],0,0,16,1);p(T.fl[1],0,0,1,8);p(T.fl[1],0,8,16,1);p(T.fl[1],8,8,1,8);p(T.fl[2],1,1,6,1);p(T.fl[2],9,1,6,1);p(T.fl[2],1,9,6,1);p(T.fl[2],9,9,6,1)};
@@ -519,7 +611,7 @@ function makeTiles(T){
   tele:tileCanvas(p=>{p('#d77bea',3,3,10,1);p('#d77bea',3,12,10,1);p('#d77bea',3,3,1,10);p('#d77bea',12,3,1,10);p('#5d275d',6,6,4,4)})}}}
 let TLS={},TL=null,TH=THEME['1a'];
 function buildTiles(){buildProps();for(const k in THEME)TLS[k]=makeTiles(THEME[k]);TL=TLS['1a']}
-function setTheme(d,f){const k=d+(f<=5?'a':'b');TH=THEME[k];TL=TLS[k];return k}
+function setTheme(d,f){const k=d+((d===6?(f-1)%10+1:f)<=5?'a':'b');TH=THEME[k];TL=TLS[k];return k}
 // 置物・壁飾りの配置
 function decorate(){
  G.deco=new Array(W*H).fill(null);G.wd=new Array(W*H).fill(null);
@@ -528,7 +620,7 @@ function decorate(){
  for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){
   const i=x+y*W;
   if(G.m[y][x]===1){if(y+1<H&&G.m[y+1][x]===0&&G.roomAt[x+(y+1)*W]>=0&&chance(.3))G.wd[i]=wpick(TH.wd);continue}
-  if(G.roomAt[i]<0||(x===G.st.x&&y===G.st.y)||(x===P.x&&y===P.y))continue;
+  if(G.roomAt[i]<0||(x===G.st.x&&y===G.st.y)||(x===P.x&&y===P.y)||(G.hz&&G.hz[i]))continue;
   const nearWall=D4.some(([dx,dy])=>wall(x+dx,y+dy));
   if(!chance(nearWall?.3:.08))continue;
   let k=wpick(TH.props);if(TALL[k]&&!nearWall)continue;
@@ -543,13 +635,14 @@ function stepParts(){const T=TH.pt;if(!T)return;while(PARTS.length<T.n)PARTS.pus
   if(q.x<-10)q.x=cw+5;if(q.x>cw+10)q.x=-5;if(q.y<-10)q.y=ch+5;if(q.y>ch+10)q.y=-5}}
 
 /* ---------- キャラクター ---------- */
-const ARMC={a_leather:['#8a5a2c','#5d3a1a'],a_hunter:['#5a7a3a','#3a5226'],a_chain:['#94b0c2','#566c86'],a_mage:['#8d5dbd','#5d275d'],a_knight:['#c2d3dd','#6f8597'],a_forest:['#38b764','#257179'],
+const ARMC={a_void:['#3a2a4a','#1c1826'],a_nether:['#5d275d','#2a1438'],a_oblivion:['#262b44','#8d5dbd'],a_eclipse:['#1a1c2c','#ff6b9a'],a_ragna:['#b13e53','#3a1420'],a_abslime:['#5d275d','#d77bea'],a_vmage:['#2a2438','#8d5dbd'],a_phantom:['#c2d3dd','#566c86'],a_agolem:['#333c57','#1a1c2c'],a_nihil:['#f4f4f4','#5d275d'],a_lava:['#4a3434','#2a1e1e'],a_flame:['#b13e53','#5d275d'],a_magma:['#ef7d57','#8a2a24'],a_inferno:['#ff5a3a','#8a1e1e'],a_phoenix:['#ffb347','#ef7d57'],a_salamander:['#d8433a','#8a2a24'],a_mgolem:['#5d3a3a','#2a1e1e'],a_flare:['#ffcd75','#b13e53'],
+ a_sky:['#a8c8f0','#6c8ec2'],a_cloud:['#f4f8fc','#c2d3dd'],a_angel:['#fff6e0','#e6d3a3'],a_divine:['#ffffff','#ffcd75'],a_heaven:['#ffe08a','#41a6f6'],a_hwisp:['#fff0b0','#e0a93a'],a_griffon:['#c9a46a','#8a6a40'],a_archguard:['#f4f4f4','#ffcd75'],a_celes:['#e8f4ff','#41a6f6'],a_arcana:['#8d5dbd','#ffcd75'],a_leather:['#8a5a2c','#5d3a1a'],a_hunter:['#5a7a3a','#3a5226'],a_chain:['#94b0c2','#566c86'],a_mage:['#8d5dbd','#5d275d'],a_knight:['#c2d3dd','#6f8597'],a_forest:['#38b764','#257179'],
  a_slime:['#73c88a','#2f8a55'],a_goblin:['#7a5a2a','#4a3a1a'],a_mush:['#d8433a','#8a2a24'],a_bat:['#4a3a5a','#2a1e36'],a_archer:['#257179','#1a3a3f'],a_boar:['#8a6a40','#5d3a1a'],
  a_ruin:['#a88c64','#6b4f2e'],a_scale:['#3f7a6a','#22504a'],a_mithril:['#c8e0f0','#7a9ab8'],a_rune:['#3b5dc9','#29366f'],a_sun:['#ffcd75','#e0a93a'],
  a_black:['#4a4f66','#262b44'],a_moon:['#c8c8f0','#7a7ab0'],a_holy:['#f4f4f4','#b0c0d0'],a_soul:['#4a2a5a','#2a1238'],a_abyss:['#5d275d','#2a1238'],
  a_golem:['#566c86','#333c57'],a_mummy:['#e6d3a3','#b08a5a'],a_gargoyle:['#6c6488','#4e4866'],a_ghost:['#e6e6f0','#94b0c2'],a_zombie:['#4a6b3a','#2a3f22'],a_banshee:['#8d5dbd','#5d275d'],
  a_drake:['#b13e53','#5d275d'],a_slimeking:['#ffcd75','#38b764'],a_guardian:['#73eff7','#3b5dc9'],a_dknight:['#5d275d','#1a1c2c']};
-const WPC={w_slime:'#73c88a',w_mush:'#d8433a',w_goblin:'#c2d3dd',w_mimic:'#f4e4c8',w_wisp:'#73eff7',w_sun:'#ffcd75',w_moon:'#c8c8f0',w_abyss:'#d77bea',w_soul:'#8d5dbd',w_drake:'#ef7d57',w_reaper:'#c2d3dd',w_slimeking:'#a7f070',w_guardian:'#73eff7',w_dknight:'#d77bea',w_emerald:'#38b764'};
+const WPC={w_void:'#b48ae0',w_nether:'#8d5dbd',w_oblivion:'#c2d3dd',w_eclipse:'#ff6b9a',w_ragna:'#ff5a5a',w_sknight:'#566c86',w_chimera:'#ffb347',w_deater:'#b13e53',w_predator:'#e6e6f0',w_nihil:'#f4b5ff',w_endless:'#73eff7',w_lava:'#ef7d57',w_flame:'#ff8a5a',w_magma:'#ffb347',w_inferno:'#ff5a3a',w_phoenix:'#ffcd75',w_fslime:'#ef7d57',w_fbat:'#ff8a5a',w_hound:'#b13e53',w_ignis:'#ff5a3a',w_draco:'#d8433a',w_volcanos:'#ffb347',w_sky:'#a8d8ff',w_cloud:'#f4f8fc',w_angel:'#fff6d0',w_divine:'#ffffff',w_heaven:'#ffe08a',w_seraph:'#fff0b0',w_minotaur:'#c9b48f',w_fallen:'#8d5dbd',w_lux:'#fff6d0',w_slime:'#73c88a',w_mush:'#d8433a',w_goblin:'#c2d3dd',w_mimic:'#f4e4c8',w_wisp:'#73eff7',w_sun:'#ffcd75',w_moon:'#c8c8f0',w_abyss:'#d77bea',w_soul:'#8d5dbd',w_drake:'#ef7d57',w_reaper:'#c2d3dd',w_slimeking:'#a7f070',w_guardian:'#73eff7',w_dknight:'#d77bea',w_emerald:'#38b764'};
 function swordLook(){const i=save.eq&&save.eq.w,d=i&&EQ[i.id];if(!d)return {bl:'#f4f4f4',sh:'#94b0c2',hi:'#ffcd75',len:5};
  const bl=WPC[i.id]||['#c2d3dd','#f4f4f4','#a8d8ff','#e8c0ff','#fff0b0'][d.r];
  return {bl,sh:'#566c86',hi:d.r>=3?'#ffcd75':'#8a5a2c',len:4+(d.v>=14?1:0)+(d.v>=24?1:0)+(i.star-1)}}
@@ -567,10 +660,10 @@ const AT={
  chain:fix16(["","","","....kkk..kkk....","...kbabkkbabk...","..kababababab k..".replace(' ',''),"..kbabababababk.","..kababababab k..".replace(' ',''),"...kkbabababkk..","....kabababak...","....knnnnnnnk...","....kbabababk...","....kBBBBBBBk...","....kkkkkkkkk..."]),
  robe:fix16(["","","....kkkkkkkk....","...kBbbbbbbBk...","...kbbkkkkbbk...","..kbbbbbbbbbbk..","..kbbbbyybbbbk..","..kbbbbbbbbbbk..","..kbbbbbbbbbbk..","..kbbbbbbbbbbk..",".kbbbbbbbbbbbbk.",".kbbbbbbbbbbbbk.",".kBbbbbbbbbbbBk.","kBBBBBBBBBBBBBBk","kkkkkkkkkkkkkkkk"]),
  cloak:fix16(["","","....kkkkkkk.....","...kaaaaaaak....","..kbbbbybbbbk...",".kbbbbbbbbbbbk..",".kbbbbbbbbbbbk..","kbbbbbbbbbbbbbk.","kbbbbBbbbBbbbbk.","kbbbbBbbbBbbbbk.","kbbbBbbbbbBbbbk.","kbbbBbbbbbBbbbk.","kBbBbbbbbbbBbBk.",".kkkkkkkkkkkkk.."])};
-const WSH={w_emerald:'great',w_boar:'great',w_sun:'great',w_black:'great',w_holy:'great',w_abyss:'great',w_slimeking:'great',w_guardian:'great',w_dknight:'great',
+const WSH={w_oblivion:'great',w_eclipse:'great',w_ragna:'great',w_nihil:'great',w_sknight:'great',w_chimera:'fang',w_predator:'fang',w_deater:'dagger',w_phoenix:'great',w_ignis:'great',w_draco:'great',w_volcanos:'great',w_heaven:'great',w_minotaur:'great',w_divine:'great',w_fbat:'dagger',w_hound:'fang',w_emerald:'great',w_boar:'great',w_sun:'great',w_black:'great',w_holy:'great',w_abyss:'great',w_slimeking:'great',w_guardian:'great',w_dknight:'great',
  w_goblin:'dagger',w_archer:'dagger',w_mimic:'fang',w_scorpion:'fang',w_drake:'fang',w_reaper:'scythe'};
 const WCOL={w_novice:'#94b0c2',w_copper:'#e09a5a',w_iron:'#c2d3dd',w_wind:'#a7f0c8',w_steel:'#e8f4ff',w_bat:'#8d5dbd',w_archer:'#c9b48f',w_boar:'#f4e4c8',w_ruin:'#e6c88e',w_ancient:'#c9a46a',w_mithril:'#b8e8ff',w_rune:'#73a8ff',w_black:'#566c86',w_holy:'#ffffff',w_skeleton:'#f4e4c8',w_sentry:'#73eff7',w_scorpion:'#ef7d57'};
-const ASH={a_cloth:'vest',a_leather:'vest',a_hunter:'vest',a_goblin:'vest',a_mush:'vest',a_archer:'vest',a_boar:'vest',a_zombie:'vest',
+const ASH={a_void:'chain',a_vmage:'robe',a_phantom:'cloak',a_nihil:'robe',a_abslime:'vest',a_eclipse:'plate',a_flame:'vest',a_cloud:'robe',a_hwisp:'robe',a_celes:'robe',a_phoenix:'cloak',a_griffon:'cloak',a_arcana:'cloak',a_salamander:'chain',a_cloth:'vest',a_leather:'vest',a_hunter:'vest',a_goblin:'vest',a_mush:'vest',a_archer:'vest',a_boar:'vest',a_zombie:'vest',
  a_chain:'chain',a_scale:'chain',a_mage:'robe',a_slime:'robe',a_rune:'robe',a_moon:'robe',a_mummy:'robe',a_slimeking:'robe',
  a_bat:'cloak',a_soul:'cloak',a_ghost:'cloak',a_banshee:'cloak'};
 const shade=(hex,k=.62)=>'#'+[1,3,5].map(i=>Math.round(parseInt(hex.slice(i,i+2),16)*k).toString(16).padStart(2,'0')).join('');
@@ -663,6 +756,12 @@ const BGM={
   bass:bassOf(['D2','D2','C2','C2','A#1','C2','D2','D2'],0),drum:'k--hs--h'},
  d3:{bpm:84,lead:'triangle',lv:.22,mel:seq('E5:4 G5:2 F#5:2 E5:4 B4:4 C5:4 B4:2 A4:2 B4:8 E5:4 G5:2 A5:2 B5:4 A5:2 G5:2 F#5:4 D#5:4 E5:8'),
   bass:bassOf(['E2','E2','C2','B1','E2','C2','B1','E2'],0),drum:'k---h---'},
+ d4:{bpm:140,lead:'square',lv:.10,mel:seq('E5:1 G5:1 A5:2 E5:1 G5:1 B5:2 A5:1 G5:1 E5:2 D5:2 E5:2 E5:1 G5:1 A5:2 C6:2 B5:1 A5:1 G5:2 A5:6 C6:2 B5:2 A5:2 G5:2 F#5:2 G5:2 A5:4 B5:2 A5:1 G5:1 F#5:2 D5:2 E5:8'),
+  bass:bassOf(['E2','E2','C2','D2','C2','D2','E2','E2'],1),drum:'k-hsk-hs'},
+ d5:{bpm:100,lead:'triangle',lv:.24,mel:seq('C5:2 E5:2 G5:4 A5:2 G5:2 E5:4 F5:2 A5:2 C6:4 B5:2 A5:2 G5:4 E5:2 G5:2 C6:3 B5:1 A5:2 G5:2 F5:4 D5:2 E5:2 F5:2 G5:2 C5:8'),
+  bass:bassOf(['C3','A2','F2','G2','C3','A2','F2','G2'],0),drum:'----h---'},
+ d6:{bpm:76,lead:'triangle',lv:.22,mel:seq('A4:4 C5:2 B4:2 E5:4 D#5:4 D5:4 C5:2 B4:2 A4:8 F5:4 E5:2 D5:2 C5:4 B4:4 G#4:4 B4:2 D5:2 C5:4 A4:4'),
+  bass:bassOf(['A1','A1','F1','E1','A1','D2','E1','A1'],0),drum:'k-----h-'},
  boss:{bpm:160,lead:'square',lv:.10,mel:seq('E5:1 E5:1 B5:1 E5:1 D6:1 E5:1 B5:1 A5:1 G5:1 E5:1 F#5:1 G5:1 A5:2 B5:2 E5:1 E5:1 B5:1 E5:1 D6:1 E5:1 B5:1 A5:1 G5:2 F#5:2 E5:4 C6:2 B5:1 A5:1 G5:2 A5:2 B5:2 G5:1 E5:1 F#5:4 D6:2 C6:1 B5:1 A5:2 B5:2 E5:8'),
   bass:bassOf(['E2','E2','E2','E2','C2','D2','E2','E2'],1),drum:'kkhskkhs'}};
 function audioInit(){
@@ -751,17 +850,27 @@ const ACH=[
  {id:'skill',n:'剣技を極めし者',d:'すべてのスキルを習得する',ok:s=>Object.keys(SK).every(k=>s.skills.includes(k))},
  {id:'items',n:'道具通',d:'アイテム図鑑をすべて埋める',ok:s=>Object.keys(IT).every(k=>s.itBook[k])},
  {id:'fall10',n:'不屈の魂',d:'探索に10回失敗する',hide:1,ok:s=>s.stats.deaths>=10},
- {id:'abyss',n:'深淵への挑戦者',d:'第3迷宮に挑戦する',ok:s=>s.stats.runs3>0},
+ {id:'abyss',n:'墓所への挑戦者',d:'第3迷宮に挑戦する',ok:s=>s.stats.runs3>0},
  {id:'boss1',n:'スライムの王を討つ者',d:'スライムキングを初めて倒す',ok:s=>s.bossKills[1]>0},
  {id:'boss2',n:'遺跡の解放者',d:'古代の守護者を初めて倒す',ok:s=>s.bossKills[2]>0},
  {id:'boss3',n:'死霊を祓う者',d:'死霊騎士を初めて倒す',ok:s=>s.bossKills[3]>0},
- {id:'allclr',n:'迷宮の覇者',d:'すべての迷宮を踏破する',hide:1,ok:s=>[1,2,3].every(d=>s.bossKills[d]>0)},
+ {id:'boss4',n:'火竜を鎮めし者',d:'灼炎竜ヴォルカノスを初めて倒す',ok:s=>s.bossKills[4]>0},
+ {id:'boss5',n:'天を越えし者',d:'天界の審判者アストラエルを初めて倒す',ok:s=>s.bossKills[5]>0},
+ {id:'aby1',n:'深淵への挑戦者',d:'終焉の深淵に初めて到達する',ok:s=>(s.bestD[6]||0)>=1},
+ {id:'aby10',n:'深淵の探求者',d:'終焉の深淵 10Fに到達する',ok:s=>(s.bestD[6]||0)>=10},
+ {id:'aby50',n:'深淵の踏破者',d:'終焉の深淵 50Fに到達する',ok:s=>(s.bestD[6]||0)>=50},
+ {id:'aby100',n:'深淵の覇者',d:'終焉の深淵 100Fに到達する',ok:s=>(s.bestD[6]||0)>=100},
+ {id:'abyk',n:'終焉を討つ者',d:'終焉の王ニヒリスを倒す',hide:1,ok:s=>!!(s.aby&&s.aby.nk)},
+ {id:'allclr',n:'迷宮の覇者',d:'すべての迷宮を踏破する',hide:1,ok:s=>[1,2,3,4,5].every(d=>s.bossKills[d]>0)},
  {id:'boss10',n:'強敵撃破',d:'ボスを合計10回倒す',ok:s=>Object.values(s.bossKills).reduce((a,b)=>a+b,0)>=10}];
 function toast(t){se('ach');const el=$('#toast');el.textContent=t;el.classList.remove('on');void el.offsetWidth;el.classList.add('on')}
 function checkAch(){for(const a of ACH)if(!save.ach[a.id]&&a.ok(save)){save.ach[a.id]=Date.now();toast(`実績解除：${a.n}`)}}
 const HS={
  1:{n:'緑の迷宮',sky:'#141826',star:'#566c86',wl:['#2a3f30','#3d5a48','#567a63'],cp:['#38b764','#257179','#a7f070'],fr:['#566c86','#94b0c2'],gd:['#3f7a3a','#4f9145'],fl:['#ef7d57','#ffcd75'],glow:'#ffcd75',deco:'grass'},
  2:{n:'忘れられた遺跡',sky:'#3a2438',star:'#b08a5a',wl:['#6b4f2e','#a88c64','#e6c88e'],cp:['#8a5a2c','#5d3a1a','#ffe08a'],fr:['#8a6a40','#cfae74'],gd:['#b8955e','#cfae74'],fl:['#ef7d57','#ffcd75'],glow:'#ffb347',deco:'sand'},
+ 4:{n:'灼熱の火山',sky:'#2a0e0e',star:'#ef7d57',wl:['#2a1a1a','#5d3a3a','#7a4a3a'],cp:['#1a1010','#b13e53','#ef7d57'],fr:['#4a2a2a','#7a4a3a'],gd:['#3a2a2a','#5d3a3a'],fl:['#ef7d57','#ffcd75'],glow:'#ef7d57',deco:'lava'},
+ 5:{n:'天空の神殿',sky:'#5c8ec2',star:'#ffffff',wl:['#c9b48f','#f4ead2','#ffffff'],cp:['#e0a93a','#ffcd75','#ffffff'],fr:['#e6d3a3','#fff6e0'],gd:['#dfe8f2','#f4f8fc'],fl:['#41a6f6','#a8d8ff'],glow:'#ffcd75',deco:'sky'},
+ 6:{n:'終焉の深淵',sky:'#05040a',star:'#8d5dbd',wl:['#0f0c16','#2a2438','#3f3654'],cp:['#1a1626','#5d275d','#d77bea'],fr:['#2a2438','#3f3654'],gd:['#15121e','#262036'],fl:['#8d5dbd','#ff6b9a'],glow:'#d77bea',deco:'void'},
  3:{n:'深淵の墓地',sky:'#0c0a12',star:'#6c6488',wl:['#1c1826','#3f3654','#574b73'],cp:['#2a2438','#5d275d','#d77bea'],fr:['#3f3654','#6c6488'],gd:['#2e2b33','#3d3a42'],fl:['#8d5dbd','#f4b5ff'],glow:'#d77bea',deco:'grave'}};
 function homeScene(d){const T=HS[d]||HS[1];let b=`<rect width="390" height="330" fill="${T.sky}"/>`;
  for(const [x,y] of [[30,20],[80,46],[140,14],[300,28],[350,58],[250,10],[190,50],[110,64]])b+=`<rect x="${x}" y="${y}" width="3" height="3" fill="${T.star}"/>`;
@@ -772,7 +881,7 @@ function homeScene(d){const T=HS[d]||HS[1];let b=`<rect width="390" height="330"
  b+=`<rect x="0" y="76" width="390" height="14" fill="${T.cp[0]}"/><rect x="0" y="90" width="390" height="5" fill="${T.cp[1]}"/>`;
  for(let x=0;x<390;x+=26)b+=`<rect x="${x+6}" y="${d===1?71:74}" width="${d===1?12:8}" height="${d===1?7:4}" fill="${T.cp[2]}"/>`;
  b+=`<rect x="110" y="120" width="170" height="160" fill="${T.fr[0]}"/><rect x="118" y="128" width="154" height="152" fill="${T.fr[1]}"/>`;
- b+=`<path d="M132 280V180h12v-18h12v-10h12v-6h54v6h12v10h12v18h12v100z" fill="#0b0f14"/>`;
+ b+=`<path d="M132 280V180h12v-18h12v-10h12v-6h54v6h12v10h12v18h12v100z" fill="${d===5?"#fff6d0":d===4?"#1a0808":d===6?"#2a0a24":"#0b0f14"}"/>`;
  [[116,'#333c57'],[96,'#262b44'],[76,'#1a1c2c']].forEach(([w,c],i)=>b+=`<rect x="${195-w/2}" y="${266-i*12}" width="${w}" height="7" fill="${c}"/>`);
  b+=`<rect x="177" y="136" width="36" height="12" fill="${T.cp[2]}"/><rect x="183" y="139" width="24" height="6" fill="${T.cp[1]}"/>`;
  b+=`<defs><radialGradient id="hg"><stop offset="0" stop-color="${T.glow}" stop-opacity=".45"/><stop offset="1" stop-color="${T.glow}" stop-opacity="0"/></radialGradient></defs>`;
@@ -781,16 +890,29 @@ function homeScene(d){const T=HS[d]||HS[1];let b=`<rect width="390" height="330"
  for(let i=0;i<26;i++)b+=`<rect x="${(i*53)%390}" y="${282+(i*17)%44}" width="6" height="3" fill="${T.gd[1]}"/>`;
  if(d===3)for(const x of [24,330])b+=`<rect x="${x}" y="250" width="30" height="34" fill="#94b0c2"/><rect x="${x+4}" y="246" width="22" height="6" fill="#94b0c2"/><rect x="${x+12}" y="256" width="6" height="16" fill="#566c86"/><rect x="${x+8}" y="261" width="14" height="5" fill="#566c86"/><rect x="${x-4}" y="282" width="38" height="6" fill="#262b44"/>`;
  if(d===2)for(const x of [20,334])b+=`<rect x="${x}" y="200" width="30" height="80" fill="#cfae74"/><rect x="${x+20}" y="200" width="10" height="80" fill="#a88c64"/><rect x="${x-4}" y="194" width="38" height="8" fill="#e6c88e"/><rect x="${x-6}" y="276" width="42" height="8" fill="#8a6a40"/>`;
+ if(d===4){b+=`<polygon points="250,86 300,30 330,30 380,86" fill="#1a0808"/><rect x="300" y="24" width="30" height="8" fill="#ef7d57"/><rect x="306" y="16" width="6" height="8" fill="#ffcd75" opacity=".7"/>`;
+  for(const x of [10,322])b+=`<rect x="${x}" y="276" width="58" height="10" fill="#ef7d57"/><rect x="${x+6}" y="278" width="20" height="4" fill="#ffcd75"/><rect x="${x+34}" y="280" width="14" height="3" fill="#ffcd75"/>`}
+ if(d===5){for(const [x,y,w] of [[20,40,70],[230,20,90],[120,60,50]])b+=`<rect x="${x}" y="${y}" width="${w}" height="12" fill="#ffffff" opacity=".85"/><rect x="${x+10}" y="${y-6}" width="${w-30}" height="8" fill="#ffffff" opacity=".85"/>`;
+  for(const x of [20,334])b+=`<rect x="${x}" y="200" width="30" height="80" fill="#fff6e0"/><rect x="${x+20}" y="200" width="10" height="80" fill="#e6d3a3"/><rect x="${x-4}" y="194" width="38" height="8" fill="#ffcd75"/><rect x="${x-6}" y="276" width="42" height="8" fill="#e0a93a"/>`;
+  for(let i=0;i<8;i++)b+=`<rect x="${i*52}" y="296" width="40" height="10" fill="#ffffff" opacity=".9"/>`}
+ if(d===6){b+=`<circle cx="195" cy="40" r="26" fill="#5d275d" opacity=".6"/><circle cx="195" cy="40" r="16" fill="#05040a"/><rect x="192" y="14" width="6" height="4" fill="#ff6b9a"/>`;
+  for(const x of [20,334])b+=`<rect x="${x}" y="190" width="30" height="90" fill="#1a1626"/><rect x="${x+20}" y="190" width="10" height="90" fill="#0f0c16"/><rect x="${x+11}" y="206" width="8" height="8" fill="#d77bea"/><rect x="${x-4}" y="184" width="38" height="8" fill="#3f3654"/><rect x="${x-6}" y="276" width="42" height="8" fill="#2a2438"/>`;
+  for(let i=0;i<6;i++)b+=`<rect x="${40+i*58}" y="${300+(i%2)*8}" width="10" height="4" fill="#ff6b9a" opacity=".6"/>`}
  if(d===1)for(const x of [16,330]){b+=`<rect x="${x}" y="246" width="44" height="34" fill="#257179"/><rect x="${x+4}" y="240" width="36" height="12" fill="#38b764"/><rect x="${x+10}" y="236" width="10" height="6" fill="#a7f070"/><rect x="${x+28}" y="252" width="5" height="5" fill="#e86a92"/>`}
  return `<svg viewBox="0 0 390 330" preserveAspectRatio="xMidYMax slice" shape-rendering="crispEdges" aria-hidden="true">${b}</svg>`}
-function homeSub(){const s=save,d=[3,2,1].find(k=>s.bestD[k]);if(!d)return 'まだ挑戦していません';return `最高到達：${DUN[d-1].name} ${s.bestD[d]}F${s.bossKills[d]?'（踏破）':''}`}
-function bookCount(){const s=save;return [Object.keys(EN).filter(k=>!EN[k].boss&&k in s.book).length+Object.values(s.bossKills).filter(v=>v>0).length+Object.keys(s.eqBook).filter(k=>EQ[k]).length+Object.keys(IT).filter(k=>s.itBook[k]).length,Object.keys(EN).length+Object.keys(EQ).length+Object.keys(IT).length]}
-function renderHome(){applyChar();$('#ver').textContent='v'+VERSION;
+function homeSub(){const s=save,d=[6,5,4,3,2,1].find(k=>s.bestD[k]);if(!d)return 'まだ挑戦していません';if(d===6)return `最高到達：終焉の深淵 ${s.bestD[6]}F`;return `最高到達：${DUN[d-1].name} ${s.bestD[d]}F${s.bossKills[d]?'（踏破）':''}`}
+// 終焉の深淵が開くまでは、図鑑・記録に深淵関連のものを出さない（ネタバレ防止）
+function abyOpen(){return unlocked(6)||!!(save.bestD&&save.bestD[6])}
+function hideEN(k){return !abyOpen()&&(ABY_FOES.includes(k)||k==='nihilis')}
+function hideEQ(k){return !abyOpen()&&(!!EQ[k].aby||hideEN(EQ[k].src))}
+function visACH(){return abyOpen()?ACH:ACH.filter(a=>!/^aby(1|10|50|100|k)$/.test(a.id))}
+function bookCount(){const s=save;return [Object.keys(EN).filter(k=>!EN[k].boss&&k in s.book).length+Object.values(s.bossKills).filter(v=>v>0).length+(s.aby&&s.aby.nk?1:0)+Object.keys(s.eqBook).filter(k=>EQ[k]).length+Object.keys(IT).filter(k=>s.itBook[k]).length,Object.keys(EN).filter(k=>!hideEN(k)).length+Object.keys(EQ).filter(k=>!hideEQ(k)).length+Object.keys(IT).length]}
+function renderHome(){if(save.cleared.includes(5)&&!save.skills.includes('barrier')){save.skills.push('barrier');persist()}applyChar();$('#ver').textContent='v'+VERSION;
  {const r=loadRun();$('#goDungeon').classList.toggle('resume',!!r);$('#goDungeon strong').textContent=r?'探索を再開':'冒険に出る';}
  const d=save.lastD||1;$('#hsvg').innerHTML=homeScene(d);$('#hdname').textContent=HS[d].n;
  {const x=$('#hchar').getContext('2d');x.clearRect(0,0,24,24);x.drawImage(SPR.heroD,4,2);SWL=swordLook();swordRects('down',SWL).forEach(([a,b,w,hh,col])=>{x.fillStyle=col;x.fillRect(4+a,2+b,w,hh)})}
- {const r=loadRun();$('#gsub').textContent=r?`中断中：${DUN[r.G.d-1].name} ${r.G.floor}F　HP ${r.P.hp}/${r.P.mhp}`:homeSub()}
- const bc=bookCount(),sub={'装備':EQ[save.eq.w.id].n,'アイテム':`持ち物 ${save.inv.length}/${SLOTS}・倉庫 ${save.store.reduce((a,x)=>a+x.n,0)}`,'図鑑':`登録 ${bc[0]}/${bc[1]}`,'記録':`実績 ${ACH.filter(a=>save.ach[a.id]).length}/${ACH.length}`,'合成':(n=>n?`合成できる ${n}組`:'同じ装備を2つで強化')(synGroups().filter(canSyn).length),'設定':'音・操作'};
+ {const r=loadRun();$('#gsub').textContent=r?`中断中：${DN(r.G.d).name} ${r.G.floor}F　HP ${r.P.hp}/${r.P.mhp}`:homeSub()}
+ const bc=bookCount(),sub={'装備':EQ[save.eq.w.id].n,'アイテム':`持ち物 ${save.inv.length}/${SLOTS}・倉庫 ${save.store.reduce((a,x)=>a+x.n,0)}`,'図鑑':`登録 ${bc[0]}/${bc[1]}`,'記録':`実績 ${visACH().filter(a=>save.ach[a.id]).length}/${visACH().length}`,'合成':(n=>n?`合成できる ${n}組`:'同じ装備を2つで強化')(synGroups().filter(canSyn).length),'設定':'音・操作'};
  $$('[data-sub]').forEach(e=>e.textContent=sub[e.dataset.sub]);
  const c=calc(),s=save;
  $('#pinfo').innerHTML=`<b>${pname()}　Lv ${s.lv}</b>${s.free?`<span class="tag" style="background:#ffcd75;color:#0f1018">振り分け ${s.free}pt</span>`:''}<div class="row"><span>称号：${s.title?`<span style="color:var(--gold)">${ACH.find(a=>a.id===s.title).n}</span>`:'なし'}</span><span>${s.stats.best?'最高到達 '+s.stats.best+'F':'まだ未挑戦'}</span></div><div class="row"><span>HP ${c.mhp}</span><span>MP ${c.mmp}</span><span>攻撃 ${c.atk}</span><span>防御 ${c.def}</span><span>運 ${c.luck}</span></div>`;
@@ -856,24 +978,24 @@ const ICON={};
 function icon(key,cv,hidden){const k=key+(hidden?'_s':'');if(!ICON[k])ICON[k]=(hidden?sil(cv):cv).toDataURL();return `<img class="ic" src="${ICON[k]}" alt="">`}
 function openBook(tab='mon'){
  const T={mon:'モンスター',w:'武器',a:'防具',it:'アイテム',boss:'ボス'};let list='',cnt=0,tot=0;
- if(tab==='mon'){const ks=Object.keys(EN).filter(k=>!EN[k].boss);tot=ks.length;list=ks.map(k=>{const f=k in save.book;f&&cnt++;
+ if(tab==='mon'){const ks=Object.keys(EN).filter(k=>!EN[k].boss&&!hideEN(k));tot=ks.length;list=ks.map(k=>{const f=k in save.book;f&&cnt++;
   return `<div class="bk">${icon('m_'+k,SPR[k],!f)}<div><b>${f?EN[k].name:'？？？？'}</b><p>${f?EN[k].note:'まだ出会っていない'}</p>${f?`<p class="u">撃破 ${save.book[k]}体${Object.keys(EQ).some(q=>EQ[q].src===k)?' ／ 専用装備：'+Object.keys(EQ).filter(q=>EQ[q].src===k).map(q=>save.eqBook[q]?EQ[q].n:'？？？').join('・'):''}</p>`:''}</div></div>`}).join('')}
- if(tab==='w'||tab==='a'){const ks=Object.keys(EQ).filter(k=>EQ[k].t===tab);tot=ks.length;list=ks.map(k=>{const d=EQ[k],f=save.eqBook[k];f&&cnt++;
-  return `<div class="bk">${icon('e_'+k,eqSpr(k),!f)}<div><b style="color:${f?RAR[d.r].c:''}">${f?d.n:'？？？？'}<span class="rar">${RAR[d.r].n}</span></b>${f?`<p>${tab==='w'?'攻撃力':'防御力'} +${d.v}${d.u?'　固有：'+Object.entries(d.u).map(([q,v])=>abTxt(q,v)).join('、'):''}</p><p class="u">入手：${d.src?EN[d.src].name+'のドロップ':d.f<99?'宝箱（'+d.f+'F〜）':'初期装備'}${(save.star[k]||1)>1?'　最高 ★'+save.star[k]:''}</p>`:`<p>${d.src&&save.book[d.src]!==undefined?EN[d.src].name+'が落とすらしい':'まだ手に入れていない'}</p>`}</div></div>`}).join('')}
+ if(tab==='w'||tab==='a'){const ks=Object.keys(EQ).filter(k=>EQ[k].t===tab&&!hideEQ(k));tot=ks.length;list=ks.map(k=>{const d=EQ[k],f=save.eqBook[k];f&&cnt++;
+  return `<div class="bk">${icon('e_'+k,eqSpr(k),!f)}<div><b style="color:${f?RAR[d.r].c:''}">${f?d.n:'？？？？'}<span class="rar">${RAR[d.r].n}</span></b>${f?`<p>${tab==='w'?'攻撃力':'防御力'} +${d.v}${d.u?'　固有：'+Object.entries(d.u).map(([q,v])=>abTxt(q,v)).join('、'):''}</p><p class="u">入手：${d.src?EN[d.src].name+'のドロップ':d.abyB?'終焉の深淵のボス':d.aby?'終焉の深淵の宝箱':d.f<99?'宝箱（'+d.f+'F〜）':'初期装備'}${(save.star[k]||1)>1?'　最高 ★'+save.star[k]:''}</p>`:`<p>${d.src&&save.book[d.src]!==undefined?EN[d.src].name+'が落とすらしい':'まだ手に入れていない'}</p>`}</div></div>`}).join('')}
  if(tab==='it'){const ks=Object.keys(IT);tot=ks.length;list=ks.map(k=>{const f=save.itBook[k];f&&cnt++;
   return `<div class="bk">${icon('i',SPR.bagI,!f)}<div><b>${f?IT[k].name:'？？？？'}<span class="rar">${IT[k].cat}</span></b><p>${f?IT[k].desc:'まだ手に入れていない'}</p></div></div>`}).join('')}
- if(tab==='boss'){tot=3;list=DUN.map(d=>{const k=d.boss,f=save.bossKills[d.id]>0||k in save.book;f&&cnt++;const own=Object.keys(EQ).filter(q=>EQ[q].src===k);
-  return `<div class="bk">${icon('m_'+k,SPR[k],!f)}<div><b>${f?EN[k].name:'？？？？'}</b><p>${d.name} 10F の主${f?'。'+EN[k].note:''}</p>${f?`<p class="u">撃破 ${save.bossKills[d.id]||0}回 ／ 専用装備：${own.map(q=>save.eqBook[q]?EQ[q].n:'？？？').join('・')}</p>`:''}</div></div>`}).join('')}
+ if(tab==='boss'){const BL=abyOpen()?DUN.concat([ABY]):DUN;tot=BL.length;list=BL.map(d=>{const k=d.boss,f=save.bossKills[d.id]>0||k in save.book;f&&cnt++;const own=Object.keys(EQ).filter(q=>EQ[q].src===k);
+  return `<div class="bk">${icon('m_'+k,SPR[k],!f)}<div><b>${f?EN[k].name:'？？？？'}</b><p>${d.name} ${d.abyss?'50Fごと':'10F'}の主${f?'。'+EN[k].note:''}</p>${f?`<p class="u">撃破 ${d.abyss?(save.aby&&save.aby.nk||0):save.bossKills[d.id]||0}回 ／ 専用装備：${own.map(q=>save.eqBook[q]?EQ[q].n:'？？？').join('・')}</p>`:''}</div></div>`}).join('')}
  page('図鑑',`<div class="tabs">${Object.entries(T).map(([k,n])=>`<button class="px${k===tab?' on':''}" data-tab="${k}">${n}</button>`).join('')}</div>
   <p>${T[tab]}　登録 ${cnt} / ${tot}</p>${list}`);
  $$('[data-tab]').forEach(b=>b.onclick=()=>openBook(b.dataset.tab));
 }
 /* ---------- 記録・実績・称号 ---------- */
 function openRecord(keep){
- const s=save.stats,got=ACH.filter(a=>save.ach[a.id]).length;
- page('記録',`<table class="tbl"><tr><td>挑戦回数</td><td>${s.runs}回</td></tr><tr><td>探索失敗</td><td>${s.deaths}回</td></tr><tr><td>撃破数</td><td>${s.kills}体</td></tr><tr><td>開けた宝箱</td><td>${s.chests}個</td></tr><tr><td>合成回数</td><td>${s.synth}回</td></tr><tr><td>総ターン</td><td>${s.turns}</td></tr>${DUN.map(d=>`<tr><td>${d.name}</td><td>${save.bestD[d.id]?'最高 '+save.bestD[d.id]+'F':'―'}${save.bossKills[d.id]?'・ボス撃破 '+save.bossKills[d.id]+'回':''}</td></tr>`).join('')}</table>
-  <h3 class="sh3">実績・称号　${got} / ${ACH.length}</h3><p style="font-size:13px">達成した実績は称号として選べます。称号はホームに表示されます。</p>
-  ${ACH.map(a=>{const ok=save.ach[a.id],cur=save.title===a.id;if(!ok&&a.hide)return `<div class="ac"><div><b>？？？？</b><p>隠し実績</p></div></div>`;
+ const s=save.stats,AC=visACH(),got=AC.filter(a=>save.ach[a.id]).length;
+ page('記録',`<table class="tbl"><tr><td>挑戦回数</td><td>${s.runs}回</td></tr><tr><td>探索失敗</td><td>${s.deaths}回</td></tr><tr><td>撃破数</td><td>${s.kills}体</td></tr><tr><td>開けた宝箱</td><td>${s.chests}個</td></tr><tr><td>合成回数</td><td>${s.synth}回</td></tr><tr><td>総ターン</td><td>${s.turns}</td></tr>${DUN.map(d=>`<tr><td>${d.name}</td><td>${save.bestD[d.id]?'最高 '+save.bestD[d.id]+'F':'―'}${save.bossKills[d.id]?'・ボス撃破 '+save.bossKills[d.id]+'回':''}</td></tr>`).join('')}${unlocked(6)||save.bestD[6]?`<tr><td>終焉の深淵</td><td>${save.bestD[6]?'最高 '+save.bestD[6]+'F':'―'}${save.aby&&save.aby.bk?'・ボス撃破 '+save.aby.bk+'回':''}</td></tr>`:''}</table>
+  <h3 class="sh3">実績・称号　${got} / ${AC.length}</h3><p style="font-size:13px">達成した実績は称号として選べます。称号はホームに表示されます。</p>
+  ${AC.map(a=>{const ok=save.ach[a.id],cur=save.title===a.id;if(!ok&&a.hide)return `<div class="ac"><div><b>？？？？</b><p>隠し実績</p></div></div>`;
    return `<div class="ac${ok?' ok':''}"><div><b>${a.n}</b><p>${a.d}</p></div>${ok?`<button class="px${cur?' on':''}" data-ttl="${cur?'':a.id}">${cur?'称号中':'称号にする'}</button>`:'<span class="lk">未達成</span>'}</div>`}).join('')}`,null,keep);
  $$('[data-ttl]').forEach(b=>b.onclick=()=>{save.title=b.dataset.ttl;persist();openRecord(true)});
 }
@@ -885,10 +1007,11 @@ function openOpt(){
   <p style="margin-top:18px">十字キーの位置</p><div class="seg"><button class="px${save.opt.dpad==='left'?' on':''}" data-dp="left">左</button><button class="px${save.opt.dpad==='right'?' on':''}" data-dp="right">右</button></div>
   ${DEV?`<h3 class="sh3" style="margin-top:22px">開発用（#dev のときだけ表示）</h3>
   <p>全ダンジョン開放</p><div class="seg"><button class="px${save.opt.allOpen?'':' on'}" data-ao="0">オフ</button><button class="px${save.opt.allOpen?' on':''}" data-ao="1">オン</button></div><p style="font-size:13px;color:var(--dim)">ボスを倒していなくても、すべての迷宮に1Fから挑戦できます。踏破の記録や実績は変わりません。</p>
-  <p style="margin-top:14px">ボスから挑戦</p><div class="seg"><button class="px${save.opt.test?'':' on'}" data-tm="0">オフ</button><button class="px${save.opt.test?' on':''}" data-tm="1">オン</button></div><p style="font-size:13px;color:var(--dim)">オンにすると、ダンジョン選択に「10F ボスから」ボタンが出ます（未解放の迷宮も含む）。</p>`:''}
+  <p style="margin-top:14px">ボスから挑戦</p><div class="seg"><button class="px${save.opt.test?'':' on'}" data-tm="0">オフ</button><button class="px${save.opt.test?' on':''}" data-tm="1">オン</button></div><p style="font-size:13px;color:var(--dim)">オンにすると、ダンジョン選択に「10F ボスから」ボタンが出ます（未解放の迷宮も含む）。</p><p style="margin-top:14px">レベル（いま Lv ${save.lv}）</p><div class="seg"><button class="px" data-lvu="10">+10</button><button class="px" data-lvu="30">+30</button></div><p style="font-size:13px;color:var(--dim)">上がった分のポイント（1Lvごとに3）は、キャラクター画面で振り分けてください。</p>`:''}
   <p style="margin-top:18px">データ</p><p style="font-size:13px;color:var(--dim)">進行データはこのブラウザ内に保存されます。ブラウザのデータ削除や、iPhoneのSafariで長く開かなかった場合などに消えることがあるので、ときどきバックアップしてください。機種変更にも使えます。</p>
   <div class="bk2"><button class="px" id="bkOut">バックアップを書き出す</button><button class="px" id="bkIn">バックアップから復元</button></div><button class="px dang" id="reset">セーブデータを消す</button><p style="font-size:12px;color:var(--slate);text-align:center;margin-top:16px">ダンジョンコレクター v${VERSION}</p>`);
  $$('[data-dp]').forEach(b=>b.onclick=()=>{save.opt.dpad=b.dataset.dp;persist();applyOpt();openOpt()});
+ $$('[data-lvu]').forEach(b=>b.onclick=()=>{const n=+b.dataset.lvu;save.lv+=n;save.free+=n*3;persist();openOpt();if(typeof renderHome==='function')renderHome()});
  $$('[data-vm]').forEach(b=>b.onclick=()=>{save.opt[b.dataset.vm]--;persist();applyVol();openOpt()});
  $$('[data-vp]').forEach(b=>b.onclick=()=>{save.opt[b.dataset.vp]++;persist();applyVol();openOpt()});
  $('#bkOut').onclick=()=>{let code='';try{code='DC1:'+btoa(unescape(encodeURIComponent(JSON.stringify(save))))}catch(e){}
@@ -956,13 +1079,14 @@ function openStatus(){
    $('#pnok').onclick=ok;$('#pnm').onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();ok()}}}};
  draw();
 }
-function unlocked(id){return id===1||(DEV&&save.opt.allOpen)||save.cleared.includes(id-1)}
+function unlocked(id){if(id===6)return (DEV&&save.opt.allOpen)||save.cleared.includes(5);return id===1||(DEV&&save.opt.allOpen)||save.cleared.includes(id-1)}
 function renderSelect(){
  $('#dlist').innerHTML=DUN.map(d=>{const ok=unlocked(d.id);
   const bk=save.bossKills[d.id]||0,bt=save.bestD[d.id]||0;
   return `<div class="dcard ${ok?'':'lock'}"><h3>${d.name}　${d.theme}${bk?'<span class="tag" style="background:#ffcd75;color:#0f1018">踏破</span>':''}</h3><p>${ok?'全10F・主な敵：'+d.foes:'前の迷宮の10Fボスを倒すと解放'}</p>${ok?`<p>最高到達 ${bt?bt+'F':'―'}${bk?'　ボス撃破 '+bk+'回':''}</p>`:''}<button class="px" data-d="${d.id}" ${ok?'':'disabled'}>${ok?'1Fから挑戦する':'未解放'}</button>${DEV&&save.opt.test?`<button class="px tst" data-b="${d.id}">10F ボスから（テスト用）</button>`:''}</div>`}).join('')+
+  (unlocked(6)?`<div class="dcard aby"><h3>隠し　終焉の深淵${save.aby&&save.aby.bk?'<span class="tag" style="background:#ff6b9a;color:#0f1018">ボス撃破 '+save.aby.bk+'</span>':''}</h3><p>果てのない階層。全迷宮の魔物と深淵の魔物が1Fから現れる。5Fごとに敵が強くなり、10Fごとにボスが待つ。</p><p>最高到達 ${save.bestD[6]?save.bestD[6]+'F':'―'}</p><button class="px" data-d="6">1Fから挑戦する</button>${DEV&&save.opt.test?`<button class="px tst" data-b="6">10F ボスから（テスト用）</button><button class="px tst" data-b="6" data-bf="50">50F ボスから（テスト用）</button>`:''}</div>`:'')+
   `<p class="note">挑戦は毎回1Fから。倒れても、レベル・装備・アイテムなどの成果は残ります。</p>`;
- $$('#dlist .dcard [data-d]').forEach(b=>b.onclick=()=>startRun(+b.dataset.d));$$('#dlist .dcard [data-b]').forEach(b=>b.onclick=()=>startRun(+b.dataset.b,10));
+ $$('#dlist .dcard [data-d]').forEach(b=>b.onclick=()=>startRun(+b.dataset.d));$$('#dlist .dcard [data-b]').forEach(b=>b.onclick=()=>startRun(+b.dataset.b,+(b.dataset.bf||10)));
 }
 
 /* ---------- マップ生成 ---------- */
@@ -1002,18 +1126,88 @@ function freeIn(ri){const r=G.rooms[ri];for(let a=0;a<60;a++){const x=r.x+rnd(r.
 function bfs(sx,sy){const d=new Int16Array(W*H).fill(-1),q=[sx+sy*W];d[q[0]]=0;
  for(let i=0;i<q.length;i++){const c=q[i],x=c%W,y=(c/W)|0;for(const [dx,dy] of D4){const nx=x+dx,ny=y+dy;if(!walk(nx,ny))continue;const k=nx+ny*W;if(d[k]<0){d[k]=d[c]+1;q.push(k)}}}return d}
 function mkEnemy(type,x,y,f,elite){const t=EN[type],v=a=>Math.round(a[0]+a[1]*(f-1));const m=elite?2:1;
+ if(isAby()){const s=abyStat(type,f);return {type,x,y,cd:0,hp:s.hp*m,mhp:s.hp*m,atk:Math.round(s.atk*(elite?1.4:1)),def:s.def+(elite?2:0),elite,st:{},ready:false,dir:'down',aware:!!t.track,flee:false,flash:-1e4,lunge:-1e4}}
  return {type,x,y,cd:0,hp:v(t.hp)*m,mhp:v(t.hp)*m,atk:Math.round(v(t.atk)*(elite?1.4:1)),def:Math.floor(t.def[0]+t.def[1]*(f-1))+(elite?2:0),elite,st:{},ready:false,dir:'down',aware:false,flee:false,flash:-1e4,lunge:-1e4}}
-const rollItem=()=>wpick(ITW);
+// 深淵：各モンスターの「本来の迷宮での強さ」を基準に、深淵の階層に合わせて数値を引き上げる（個性はそのまま）
+const HOMED={};let REFS=null;
+function abyRefs(){if(REFS)return REFS;REFS={};
+ for(let d=1;d<=5;d++){const ks=Object.keys(foeTable(d,8));for(const k of ks)if(!HOMED[k])HOMED[k]=d;REFS[d]=ks}
+ HOMED.mimic=1;for(const k of ABY_FOES)HOMED[k]=5;DUN.forEach(x=>HOMED[x.boss]=x.id);HOMED.nihilis=5;return REFS}
+function refAvg(d,s,F){const ks=abyRefs()[d];return ks.reduce((a,k)=>a+EN[k][s][0]+EN[k][s][1]*(F-1),0)/ks.length}
+const BOSSM={slimeking:[1,.95,.85],guardian:[1,.95,1.15],dknight:[.95,1.05,1],volcanos:[1,1,.95],astrael:[1,1,1],nihilis:[1.3,1.1,1.1]};
+function abyStat(type,Fa){abyRefs();const t=EN[type],out={};
+ if(t.boss){const m=BOSSM[type]||[1,1,1],A=EN.astrael;['hp','atk','def'].forEach((s,i)=>out[s]=Math.round(A[s][0]*m[i]*refAvg(5,s,Fa)/refAvg(5,s,50)));return out}
+ const hd=HOMED[type]||5,Fh=hd===5?Fa:(hd-1)*10+7;
+ for(const s of ['hp','atk','def']){const own=t[s][0]+t[s][1]*(Fh-1),rel=own/Math.max(.5,refAvg(hd,s,Fh));
+  const k=hd===5?1:(s==='def'?.5:.8),rd=hd===5?rel:Math.min(1.5,Math.max(.6,1+(rel-1)*k));out[s]=Math.round(refAvg(5,s,Fa)*rd)}
+ return out}
+// 回復アイテムは迷宮の深さに合わせて変わる（浅い迷宮ほど薬草、深い迷宮ほど大回復・割合回復）
+const HEALW={1:{herb:12,herb2:6,potion:5,elixir:1,panacea:3},2:{herb:10,herb2:7,potion:5,elixir:1,panacea:3},3:{herb:5,herb2:9,herb3:3,potion:6,elixir:1,panacea:3},
+ 4:{herb2:4,herb3:10,potion:8,potion2:3,elixir:1.5,panacea:4},5:{herb3:9,herb4:2,potion:8,potion2:4,elixir:1.5,panacea:4},6:{herb3:6,herb4:5,potion:7,potion2:6,elixir:2,panacea:4}};
+const rollItem=()=>{const d=G&&G.d||1,w=Object.assign({},ITW);for(const k of ['herb','herb2','herb3','herb4','potion','potion2','elixir','panacea'])delete w[k];return wpick(Object.assign(w,HEALW[d]||HEALW[1]))};
 function foeTable(d,f){
+ if(d===6){if(!foeTable.aby){const o={};for(let k=1;k<=5;k++)for(const t of Object.keys(foeTable(k,8)))o[t]=1;for(const t of ABY_FOES)o[t]=1.5;foeTable.aby=o}return foeTable.aby}
+ if(d===4)return f<=3?{fslime:3,salamander:2,fbat:2,mgolem:1}:f<=6?{fslime:2,salamander:2,fbat:2,mgolem:2,hound:2,ignis:1}:{fslime:1,salamander:2,fbat:2,mgolem:2,hound:3,ignis:3};
+ if(d===5)return f<=3?{hwisp:3,griffon:2,seraph:1,archguard:1}:f<=6?{hwisp:2,griffon:2,seraph:2,archguard:2,minotaur:2,fallen:1}:{hwisp:2,griffon:2,seraph:2,archguard:2,minotaur:3,fallen:3};
  if(d===2)return f<=3?{skeleton:3,golem:1,mummy:2,scorpion:2}:f<=6?{skeleton:2,golem:2,mummy:2,scorpion:2,sentry:2,gargoyle:1}:{skeleton:2,golem:3,mummy:2,scorpion:2,sentry:3,gargoyle:3};
  if(d===3)return f<=3?{ghost:3,zombie:3,wisp:2,skeleton:1}:f<=6?{ghost:2,zombie:2,wisp:2,banshee:2,reaper:1}:{ghost:2,zombie:2,wisp:2,banshee:3,reaper:3,drake:2};
  return f<=2?{slime:4,goblin:2,mush:2,bat:2}:f<=5?{slime:2,goblin:3,mush:2,bat:2,archer:2,boar:1}:{slime:1,goblin:3,mush:2,bat:2,archer:3,boar:3}}
 const ename=e=>(e.elite?'強き':'')+EN[e.type].name;
-function chestType(f,bonus){return wpick({wood:65-f*3+(bonus?-30:0),iron:28+f*2+(bonus?15:0),gold:5+f+(bonus?15:0)})}
+function chestType(f,bonus){if(isAby())return wpick(bonus?{iron:40,gold:60}:{wood:20,iron:50,gold:30});return wpick({wood:65-f*3+(bonus?-30:0),iron:28+f*2+(bonus?15:0),gold:5+f+(bonus?15:0)})}
 
+function placeHaz(d,rs){
+ if(d!==4&&d!==5)return;
+ const ok=(x,y)=>G.m[y][x]===0&&G.roomAt[x+y*W]>=0&&!occupied(x,y)&&!door(x,y)&&!G.hz[x+y*W];
+ if(d===4){for(const ri of rs){if(!chance(.55))continue;const r=G.rooms[ri],w=2+rnd(2),hh=1+rnd(2),x0=r.x+1+rnd(Math.max(1,r.w-w-1)),y0=r.y+1+rnd(Math.max(1,r.h-hh-1));
+   for(let y=y0;y<y0+hh;y++)for(let x=x0;x<x0+w;x++)if(ok(x,y))G.hz[x+y*W]=1}
+  for(let n=2+rnd(3),a=0;n>0&&a<80;a++){const ri=pick(rs),r=G.rooms[ri],x=r.x+1+rnd(Math.max(1,r.w-2)),y=r.y+1+rnd(Math.max(1,r.h-2));if(ok(x,y)){G.hz[x+y*W]=3;G.vents.push({x,y,ph:rnd(4)});n--}}}
+ if(d===5)for(let n=3+rnd(4),a=0;n>0&&a<80;a++){const r=G.rooms[pick(rs)],x=r.x+rnd(r.w),y=r.y+rnd(r.h);if(ok(x,y)){G.hz[x+y*W]=2;n--}}
+ if(d===5){placeBeams(rs,2+rnd(2),ok);placeWind(rs,3+rnd(3),ok)}
+}
+// 第5迷宮・深淵の仕掛け：裁きの光線（予告のあと部屋の1列を撃ち抜く）／突風の床（踏むと矢印の方向へ飛ばされる）／虚無の床（深淵のみ）
+function placeBeams(rs,n,ok){for(let a=0;n>0&&a<120;a++){const r=G.rooms[pick(rs)];if(r.w<5||r.h<4)continue;const x=r.x+rnd(r.w),y=r.y+rnd(r.h);if(!ok(x,y))continue;
+  const ax=chance(.5)?'h':'v',cells=[];if(ax==='h')for(let i=r.x;i<r.x+r.w;i++)cells.push([i,y]);else for(let j=r.y;j<r.y+r.h;j++)cells.push([x,j]);
+  if(G.beams.some(b=>b.cells.some(([u,v])=>cells.some(([p2,q])=>p2===u&&q===v))))continue;G.hz[x+y*W]=6;G.beams.push({x,y,ax,ph:rnd(4),cells});n--}}
+function placeWind(rs,n,ok){for(let a=0;n>0&&a<120;a++){const r=G.rooms[pick(rs)],x=r.x+rnd(r.w),y=r.y+rnd(r.h);if(!ok(x,y))continue;G.hz[x+y*W]=4;G.wdir[x+y*W]=pick(Object.keys(DIRS));n--}}
+function placeAbyHaz(rs){const ok=(x,y)=>G.m[y][x]===0&&G.roomAt[x+y*W]>=0&&!occupied(x,y)&&!door(x,y)&&!G.hz[x+y*W];
+ for(let n=3+rnd(3),a=0;n>0&&a<100;a++){const r=G.rooms[pick(rs)],x=r.x+1+rnd(Math.max(1,r.w-2)),y=r.y+1+rnd(Math.max(1,r.h-2));if(ok(x,y)){G.hz[x+y*W]=5;n--}}
+ const kinds=['lava','vent','beam','wind','light'].sort(()=>Math.random()-.5).slice(0,2+(G.floor>=20?1:0));
+ for(const k of kinds){
+  if(k==='lava')for(const ri of rs){if(!chance(.35))continue;const r=G.rooms[ri],w=2+rnd(2),hh=1+rnd(2),x0=r.x+1+rnd(Math.max(1,r.w-w-1)),y0=r.y+1+rnd(Math.max(1,r.h-hh-1));for(let y=y0;y<y0+hh;y++)for(let x=x0;x<x0+w;x++)if(ok(x,y))G.hz[x+y*W]=1}
+  if(k==='vent')for(let n=2+rnd(2),a=0;n>0&&a<80;a++){const r=G.rooms[pick(rs)],x=r.x+1+rnd(Math.max(1,r.w-2)),y=r.y+1+rnd(Math.max(1,r.h-2));if(ok(x,y)){G.hz[x+y*W]=3;G.vents.push({x,y,ph:rnd(4)});n--}}
+  if(k==='beam')placeBeams(rs,2+rnd(2),ok);
+  if(k==='wind')placeWind(rs,3+rnd(3),ok);
+  if(k==='light')for(let n=2+rnd(3),a=0;n>0&&a<80;a++){const r=G.rooms[pick(rs)],x=r.x+rnd(r.w),y=r.y+rnd(r.h);if(ok(x,y)){G.hz[x+y*W]=2;n--}}}}
+const HOLY={hwisp:1,griffon:1,seraph:1,minotaur:1,archguard:1,fallen:1,astrael:1};
+function beamTick(){if(!G.beams||!G.beams.length)return;const t=performance.now();
+ for(const b of G.beams){const s=(G.turn+b.ph)%4;b.warn=s===3;
+  if(b.warn&&G.vis[b.x+b.y*W]&&b.cells.some(([x,y])=>x===P.x&&y===P.y)){say('裁きの光が集まっている！ 次のターンに光線が走る。');G.interrupt=true}
+  if(s===0){b.t0=t;const onP=b.cells.some(([x,y])=>x===P.x&&y===P.y);
+   if(onP){if(P.barrier){fx(P.x,P.y,'無効','#fff6d0');say('聖なる結界が裁きの光を防いだ！')}
+    else{const d=Math.max(6,Math.round(P.mhp*.1));P.hp=Math.max(0,P.hp-d);P.flash=t;fx(P.x,P.y,d,'#ffcd75');say(`裁きの光線に撃ち抜かれた！ ${d} のダメージ。`);if(chance(.2))applySt(P,'conf');G.interrupt=true}}
+   for(const e of [...G.en])if(!HOLY[e.type]&&!EN[e.type].boss&&b.cells.some(([x,y])=>x===e.x&&y===e.y)){const d=Math.max(6,Math.round(e.mhp*.15));e.hp-=d;e.flash=t;fx(e.x,e.y,d,'#ffcd75');if(e.hp<=0)kill(e)}
+   if(onP||G.vis[b.x+b.y*W])se('trap')}}}
+function windPush(){const i=P.x+P.y*W,dir=G.wdir&&G.wdir[i];if(!dir)return;const [dx,dy]=DIRS[dir];let n=0;
+ while(n<3){const x=P.x+dx,y=P.y+dy;if(!pass(x,y)||!walk(x,y)||enemyAt(x,y)||chestAt(x,y))break;P.ox=P.x;P.oy=P.y;P.x=x;P.y=y;n++}
+ if(n){P.mt=performance.now();P.dir=dir;se('stairs');say('突風に飛ばされた！');G.interrupt=true;const tr=at(G.traps,P.x,P.y);if(tr)trigger(tr);if(G.hz[P.x+P.y*W]!==4)stepHaz(true)}}
+const FIREPROOF={fslime:1,salamander:1,mgolem:1,fbat:1,hound:1,ignis:1,volcanos:1};
+function stepHaz(noWind){if(!G.hz)return;const i=P.x+P.y*W,k=G.hz[i];
+ if(k===4&&!noWind){windPush();return}
+ if(k===5){G.hz[i]=0;const d=Math.max(5,Math.round(P.mhp*.06));P.hp=Math.max(0,P.hp-d);P.flash=performance.now();fx(P.x,P.y,d,'#8d5dbd');se('trap');say(`虚無の床に足をとられた！ ${d} のダメージ。`);if(chance(.25))applySt(P,'curse');G.interrupt=true;
+  if(chance(.35)){const sp=D4.map(([dx,dy])=>[P.x+dx,P.y+dy]).find(([x,y])=>walk(x,y)&&!enemyAt(x,y));if(sp){const m=mkEnemy(pick(ABY_FOES),sp[0],sp[1],eff());m.aware=true;G.en.push(m);say('闇の中から魔物が這い出してきた！')}}}
+ if(k===1&&P.barrier){say('聖なる結界が溶岩の熱を防いだ。')}
+ else if(k===1){const d=Math.max(5,Math.round(P.mhp*.08));P.hp=Math.max(0,P.hp-d);P.flash=performance.now();fx(P.x,P.y,d,'#ef7d57');se('trap');say(`溶岩だ！ ${d} のダメージ。`);if(chance(.15))applySt(P,'burn');G.interrupt=true}
+ if(k===2){G.hz[i]=0;const h=heal(Math.ceil(P.mhp*.15)),m=Math.min(5,P.mmp-P.mp);P.mp+=m;se('heal');say(`光の床が輝いた。HP ${h}・MP ${m} 回復した。`)}}
+function ventTick(){if(!G.vents||!G.vents.length)return;const t=performance.now();
+ for(const v of G.vents){const s=(G.turn+v.ph)%4;v.warn=s===3;
+  if(s===0){v.t0=t;let hit=false;
+   if(Math.abs(P.x-v.x)<=1&&Math.abs(P.y-v.y)<=1&&P.barrier){fx(P.x,P.y,'無効','#fff6d0');say('聖なる結界が炎を防いだ！')}
+   else if(Math.abs(P.x-v.x)<=1&&Math.abs(P.y-v.y)<=1){const d=Math.max(6,Math.round(P.mhp*.08));P.hp=Math.max(0,P.hp-d);P.flash=t;fx(P.x,P.y,d,'#ef7d57');say(`火炎噴出口から炎が噴き出した！ ${d} のダメージ。`);if(chance(.2))applySt(P,'burn');hit=true;G.interrupt=true}
+   for(const e of [...G.en])if(!FIREPROOF[e.type]&&Math.abs(e.x-v.x)<=1&&Math.abs(e.y-v.y)<=1){const d=Math.max(6,Math.round(e.mhp*.15));e.hp-=d;e.flash=t;fx(e.x,e.y,d,'#ef7d57');if(e.hp<=0)kill(e)}
+   if(hit||G.vis[v.x+v.y*W])se('trap')}}}
 function newFloor(d,f){
- setTheme(d,f);if(f===10)return bossFloor(d);
- const {m,rooms,roomAt}=genMap();const F=(d-1)*10+f;
+ setTheme(d,f);if(bossF(d,f))return bossFloor(d,f);
+ const {m,rooms,roomAt}=genMap();const F=d===6?Math.round(abyF(f)):(d-1)*10+f;
  G={d,floor:f,m,rooms,roomAt,en:[],chests:[],items:[],traps:[],events:[],springs:[],kind:{},told:{},turn:G?G.turn:0,log:G?G.log:[],fx:[],
   seen:new Uint8Array(W*H),vis:new Uint8Array(W*H),over:false,interrupt:false,seenEn:new Set(),st:{x:-1,y:-1},proj:[]};
  const start=rnd(rooms.length);const r0=rooms[start];P.x=r0.x+rnd(r0.w);P.y=r0.y+rnd(r0.h);P.mt=0;P.dir='down';P.mp=P.mmp;
@@ -1022,45 +1216,56 @@ function newFloor(d,f){
  [G.st.x,G.st.y]=freeIn(fr);
  // 特殊部屋（50%で1つ）
  const others=rooms.map((_,i)=>i).filter(i=>i!==start&&i!==fr);
- if(chance(.5)){const ri=pick(others),k=wpick({treasure:3,house:f>=2?2:0,heal:2,trial:f>=2?2:0});G.kind[ri]=k;
+ if(chance(.5)){const ri=pick(others),k=wpick({treasure:3,house:f>=2?2:0,heal:2,trial:f>=2?2:0,firevault:d===4?1:0,seal:(d===5||d===6)&&f>=2?2:0,phantom:d>=5?2:0,mystic:d>=5?1:0});G.kind[ri]=k;
   if(k==='treasure')for(let n=3+rnd(2);n--;){const c=freeIn(ri);c&&G.chests.push({x:c[0],y:c[1],type:chestType(f,1),mimic:f>=2&&chance(.08)})}
   if(k==='house'){for(let n=7+rnd(4);n--;){const c=freeIn(ri);c&&G.en.push(mkEnemy(wpick(foeTable(d,f)),c[0],c[1],F))}for(let n=2;n--;){const c=freeIn(ri);c&&G.chests.push({x:c[0],y:c[1],type:chestType(f,1)})}}
+  if(k==='firevault')for(let n=3+rnd(2);n--;){const c=freeIn(ri);c&&G.chests.push({x:c[0],y:c[1],type:chestType(f,1),fire:1})}
+  if(k==='seal'){const c=freeIn(ri);G.en.push(mkEnemy(wpick(foeTable(d,Math.max(f,4))),c[0],c[1],F+2,true));for(let n=2;n--;){const c2=freeIn(ri);c2&&G.chests.push({x:c2[0],y:c2[1],type:'gold',locked:true})}}
+  if(k==='phantom'){const n=4,real=rnd(n);for(let a=0;a<n;a++){const c=freeIn(ri);c&&G.chests.push({x:c[0],y:c[1],type:pick(['iron','gold']),mimic:a!==real&&chance(.5)})}}
+  if(k==='mystic')for(let n=2+rnd(2);n--;){const c=freeIn(ri);c&&G.chests.push({x:c[0],y:c[1],type:'gold',plus:1})}
   if(k==='heal'){const r=rooms[ri];G.springs.push({x:r.x+(r.w>>1),y:r.y+(r.h>>1),used:false})}
   if(k==='trial'){const c=freeIn(ri);G.en.push(mkEnemy(wpick(foeTable(d,Math.max(f,4))),c[0],c[1],F+2,true));const c2=freeIn(ri);G.chests.push({x:c2[0],y:c2[1],type:'gold',locked:true})}}
  const plain=others.filter(i=>!G.kind[i]);
- for(let n=2+rnd(2);n--;){const c=freeIn(pick(plain));c&&G.chests.push({x:c[0],y:c[1],type:chestType(f),mimic:f>=2&&chance(.06)})}
- const EVS=['spring','altar','trace','stone','fairy','wforge','forge','luck'];
+ for(let n=(d===6?3:2)+rnd(2);n--;){const c=freeIn(pick(plain));c&&G.chests.push({x:c[0],y:c[1],type:chestType(f),mimic:f>=2&&chance(.06)})}
+ G.hz=new Uint8Array(W*H);G.vents=[];G.beams=[];G.wdir={};placeHaz(d,others);if(d===6)placeAbyHaz(others);
+ const EVS=['spring','altar','trace','stone','fairy','wforge','forge','luck'].concat(d===4?['hotaltar','hotaltar']:[]);
  for(let n=chance(.7)?1+rnd(2):0;n--;){const c=freeIn(pick(plain));c&&G.events.push({x:c[0],y:c[1],type:pick(EVS)})}
- for(let n=2+Math.floor(f/2)+rnd(2);n--;){const c=freeIn(pick(others));c&&G.traps.push({x:c[0],y:c[1],type:wpick({pit:3,arrow:3,para:2,bomb:2,tele:2}),seen:false})}
- const n=Math.min(5+f,14),tbl=foeTable(d,f);
- const unk=Object.keys(SK).filter(k=>!save.skills.includes(k));if(unk.length&&chance(.3)){const c=freeIn(pick(plain));c&&G.items.push({x:c[0],y:c[1],k:'sk',v:pick(unk)})}
+ for(let n=2+Math.floor(Math.min(f,10)/2)+rnd(2)+(d===5?2:d===6?3:0);n--;){const c=freeIn(pick(others));c&&G.traps.push({x:c[0],y:c[1],type:wpick({pit:3,arrow:3,para:2,bomb:2,tele:2}),seen:false})}
+ const n=d===6?Math.min(7+Math.floor(f/5),14):Math.min(5+f,14),tbl=foeTable(d,f);
+ const unk=Object.keys(SK).filter(k=>!save.skills.includes(k)&&!SK[k].noBook);if(unk.length&&chance(.3)){const c=freeIn(pick(plain));c&&G.items.push({x:c[0],y:c[1],k:'sk',v:pick(unk)})}
  for(let i=0,a=0;i<n&&a<300;a++){const ri=pick(plain.concat(others));if(G.kind[ri])continue;const c=freeIn(ri);if(!c)continue;G.en.push(mkEnemy(wpick(tbl),c[0],c[1],F));i++}
  decorate();arrive(d,f);
 }
-function arrive(d,f){setTimeout(saveRun,0);if(f===1||f===6||f===10)setTimeout(()=>{if(G&&G.floor===f)say(`― ${TH.name} ―`)},30);playBgm(G.boss?'boss':'d'+d);save.stats.best=Math.max(save.stats.best,f);save.bestD[d]=Math.max(save.bestD[d]||0,f);persist();
- updVis();cam.x=P.x;cam.y=P.y;hud();say(`${DUN[d-1].name} ${f}F に到着した。`)}
-function bossFloor(d){
+function arrive(d,f){setTimeout(saveRun,0);const ff=d===6?(f-1)%10+1:f;if(ff===1||ff===6||ff===10)setTimeout(()=>{if(G&&G.floor===f)say(`― ${TH.name} ―`)},30);playBgm(G.boss?'boss':'d'+d);if(d!==6)save.stats.best=Math.max(save.stats.best,f);
+ const rec=d===6&&f>(save.bestD[6]||0)&&(save.bestD[6]||0)>0;save.bestD[d]=Math.max(save.bestD[d]||0,f);persist();
+ updVis();cam.x=P.x;cam.y=P.y;hud();say(`${DN(d).name} ${f}F に到着した。`);if(rec&&f%5===0)say(`最高到達記録を更新！（${f}F）`)}
+function bossFloor(d,f=10){
  const m=Array.from({length:H},()=>new Uint8Array(W).fill(1));
  const rooms=[{x:11,y:5,w:17,h:13},{x:16,y:29,w:7,h:5}];
  for(const r of rooms)for(let j=r.y;j<r.y+r.h;j++)for(let i=r.x;i<r.x+r.w;i++)m[j][i]=0;
  for(let y=18;y<29;y++)m[y][19]=0;
  const roomAt=new Int8Array(W*H).fill(-1);rooms.forEach((r,i)=>{for(let j=r.y;j<r.y+r.h;j++)for(let k=r.x;k<r.x+r.w;k++)roomAt[k+j*W]=i});
- G={d,floor:10,boss:true,m,rooms,roomAt,en:[],chests:[],items:[],traps:[],events:[],springs:[],kind:{},told:{},turn:G?G.turn:0,log:G?G.log:[],fx:[],
+ G={d,floor:f,boss:true,m,rooms,roomAt,en:[],chests:[],items:[],traps:[],events:[],springs:[],kind:{},told:{},turn:G?G.turn:0,log:G?G.log:[],fx:[],
   seen:new Uint8Array(W*H),vis:new Uint8Array(W*H),over:false,interrupt:false,seenEn:new Set(),st:{x:-1,y:-1},proj:[]};
  P.x=19;P.y=32;P.mt=0;P.dir='up';P.mp=P.mmp;
- const b=mkEnemy(DUN[d-1].boss,19,9,d*10);b.cd=2;G.en.push(b);
- const it=freeIn(1);G.items.push({x:it[0],y:it[1],k:'it',v:'herb2'});
- decorate();for(let x=12;x<27;x+=3){G.wd[x+4*W]=Object.keys(TH.wd)[0]}arrive(d,10);say('ただならぬ気配がする……');
+ const bt=d===6?abyBoss(f):DUN[d-1].boss,bd=d===6?HOMED[bt]||(abyRefs(),HOMED[bt]):d;
+ const b=mkEnemy(bt,19,9,d===6?Math.round(abyF(f))+4:d*10);b.cd=2;G.en.push(b);
+ G.hz=new Uint8Array(W*H);G.vents=[];G.beams=[];G.wdir={};d=bd;
+ if(d===4){for(const [x0,y0] of [[12,6],[25,6],[12,15],[25,15]])for(let y=y0;y<y0+2;y++)for(let x=x0;x<x0+2;x++)G.hz[x+y*W]=1;for(const [x,y] of [[15,11],[23,11]]){G.hz[x+y*W]=3;G.vents.push({x,y,ph:x%4})}}
+ if(d===5){for(const [x,y] of [[12,6],[26,6],[12,16],[26,16]])G.hz[x+y*W]=2;
+  for(const [x,y,ph] of [[11,7,0],[27,15,2]]){const cells=[];for(let i=11;i<28;i++)cells.push([i,y]);G.hz[x+y*W]=6;G.beams.push({x,y,ax:'h',ph,cells})}}
+ const it=freeIn(1);G.items.push({x:it[0],y:it[1],k:'it',v:G.d>=5?'potion2':G.d>=4?'herb3':'herb2'});
+ decorate();for(let x=12;x<27;x+=3){G.wd[x+4*W]=Object.keys(TH.wd)[0]}arrive(G.d,f);say('ただならぬ気配がする……');
 }
 /* ---------- 探索の中断・再開 ---------- */
 const RUNKEY='dungeon_rpg_run';
 function saveRun(){try{if(!G||G.over){localStorage.removeItem(RUNKEY);return}
- const g=Object.assign({},G,{m:G.m.map(r=>Array.from(r).join('')),roomAt:Array.from(G.roomAt),seen:Array.from(G.seen).join(''),vis:null,seenEn:null,fx:[],proj:[]});
+ const g=Object.assign({},G,{m:G.m.map(r=>Array.from(r).join('')),roomAt:Array.from(G.roomAt),seen:Array.from(G.seen).join(''),hz:G.hz?Array.from(G.hz).join(''):'',vis:null,seenEn:null,fx:[],proj:[]});
  localStorage.setItem(RUNKEY,JSON.stringify({v:1,G:g,P}))}catch(e){}}
 function loadRun(){try{const r=JSON.parse(localStorage.getItem(RUNKEY));return r&&r.v===1&&r.G&&r.P?r:null}catch(e){return null}}
 function resumeRun(r){
- const g=r.G;g.m=g.m.map(s=>Uint8Array.from(s,ch=>+ch));g.roomAt=Int8Array.from(g.roomAt);g.seen=Uint8Array.from(g.seen,ch=>+ch);
- g.vis=new Uint8Array(W*H);g.seenEn=new Set();g.fx=[];g.proj=[];g.over=false;g.interrupt=false;G=g;P=r.P;
+ const g=r.G;g.m=g.m.map(s=>Uint8Array.from(s,ch=>+ch));g.roomAt=Int8Array.from(g.roomAt);g.seen=Uint8Array.from(g.seen,ch=>+ch);g.hz=g.hz?Uint8Array.from(g.hz,ch=>+ch):new Uint8Array(W*H);
+ g.beams=g.beams||[];g.wdir=g.wdir||{};g.vis=new Uint8Array(W*H);g.seenEn=new Set();g.fx=[];g.proj=[];g.over=false;g.interrupt=false;G=g;P=r.P;
  P.flash=P.lunge=P.swing=P.spin=P.gale=-1e4;P.mt=0;for(const e of G.en){e.flash=e.lunge=-1e4;e.mt=0}
  setTheme(G.d,G.floor);show('game');updVis();for(const e of G.en)if(G.vis[e.x+e.y*W])G.seenEn.add(e);
  cam.x=P.x;cam.y=P.y;recalc();hud();playBgm(G.boss?'boss':'d'+G.d);
@@ -1068,13 +1273,13 @@ function resumeRun(r){
  $('#log').innerHTML=G.log.map(l=>`<div>${l}</div>`).join('');say('探索を再開した。');
 }
 function askResume(){const r=loadRun();if(!r)return;const g=r.G;
- modal(`<h3>探索が中断されています</h3><p>${DUN[g.d-1].name} ${g.floor}F　HP ${r.P.hp}/${r.P.mhp}</p><p>前回の続きから再開できます。やめる場合は撤退と同じ扱いになり、成果は残ります。</p>`,
+ modal(`<h3>探索が中断されています</h3><p>${DN(g.d).name} ${g.floor}F　HP ${r.P.hp}/${r.P.mhp}</p><p>前回の続きから再開できます。やめる場合は撤退と同じ扱いになり、成果は残ります。</p>`,
   [{label:'やめる',fn:()=>{try{localStorage.removeItem(RUNKEY)}catch(e){}}},{label:'再開する',pri:1,fn:()=>resumeRun(r)}])}
 function startRun(d,f0=1){
  P={hp:0,mp:0,mhp:0,x:0,y:0,dir:'down',buff:0,lucky:false,st:{},guard:0,counter:0,flash:-1e4,lunge:-1e4,swing:-1e4,spin:-1e4,gale:-1e4};
  Object.assign(P,calc());P.hp=P.mhp;P.mp=P.mmp;
- save.lastD=d;G=null;newFloor(d,f0);save.stats.runs++;if(d===3)save.stats.runs3++;persist();show('game');
- if(f0===10)setTimeout(()=>modal(`<h3>10F ボスの間（テスト）</h3><p>${EN[DUN[d-1].boss].name}が待ち構えている。</p><p>赤く光るマスは次のターンに攻撃が来る場所です。</p>`,[{label:'挑む',pri:1}]),200);
+ save.lastD=d;G=null;newFloor(d,f0);save.stats.runs++;if(d===3)save.stats.runs3++;if(d===6)save.stats.runs6=(save.stats.runs6||0)+1;persist();show('game');
+ if(bossF(d,f0))setTimeout(()=>modal(`<h3>${f0}F ボスの間（テスト）</h3><p>${EN[d===6?abyBoss(f0):DUN[d-1].boss].name}が待ち構えている。</p><p>赤く光るマスは次のターンに攻撃が来る場所です。</p>`,[{label:'挑む',pri:1}]),200);
 }
 
 /* ---------- 視界 ---------- */
@@ -1120,32 +1325,44 @@ function tickSt(ent){
 function strike(e,t,mul=1,first=true){
  P.lunge=t;P.swing=t;
  if(EN[e.type].eva&&!e.st.sleep&&!e.st.para&&!e.st.frz&&chance(EN[e.type].eva)){se('miss');fx(e.x,e.y,'MISS','#94b0c2');say(`${ename(e)}にかわされた。`);e.aware=true;return}
- let d=dmg(patk(),edef(e),mul);const cr=chance(abil('crit')/100);if(cr)d=Math.round(d*1.5);
+ let d=dmg(patk(),edef(e),mul);const cr=chance(abil('crit')/100);if(cr)d=Math.round(d*1.5);if(EN[e.type].tough)d=Math.max(1,Math.round(d*.6));
  se(cr?'crit':'hit');e.hp-=d;e.flash=t;e.aware=true;delete e.st.sleep;fx(e.x,e.y,cr?d+'!':d,cr?'#ffcd75':'#f4f4f4');
  const st=Math.floor(d*abil('steal')/100);if(st>0)heal(st);
  if(e.hp<=0){kill(e);return}
  say(`${cr?'会心の一撃！ ':''}${ename(e)}に ${d} のダメージ。`);
  if(chance(abil('pois')/100))applySt(e,'poison');
  if(EN[e.type].flee&&!e.flee&&e.hp<e.mhp*EN[e.type].flee){e.flee=true;say(`${ename(e)}は逃げ出した！`)}
- if(e.type==='slime'&&!e.child&&e.hp>=4&&chance(.25)){const sp=D4.map(([dx,dy])=>[e.x+dx,e.y+dy]).find(([x,y])=>walk(x,y)&&!enemyAt(x,y)&&!(x===P.x&&y===P.y));
-  if(sp){const h=Math.floor(e.hp/2);e.hp-=h;e.child=true;G.en.push({...e,st:{},x:sp[0],y:sp[1],hp:h,flash:-1e4,lunge:-1e4});say('スライムが分裂した！')}}
+ if(EN[e.type].blink&&e.hp>0&&chance(EN[e.type].blink)){const cs=[];for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const x=e.x+dx,y=e.y+dy;if(Math.abs(dx)+Math.abs(dy)>=3&&walk(x,y)&&!enemyAt(x,y)&&!(x===P.x&&y===P.y)&&(!G.roomAt||G.roomAt[x+y*W]===G.roomAt[e.x+e.y*W]||!G.boss))cs.push([x,y])}
+  if(cs.length){const [x,y]=pick(cs);fx(e.x,e.y,'消えた！','#b8b0d8');e.x=x;e.y=y;e.mt=0;say(`${ename(e)}は姿を消し、別の場所に現れた！`)}}
+ if((e.type==='slime'||EN[e.type].split)&&!e.child&&e.hp>=4&&chance(EN[e.type].split||.25)){const sp=D4.map(([dx,dy])=>[e.x+dx,e.y+dy]).find(([x,y])=>walk(x,y)&&!enemyAt(x,y)&&!(x===P.x&&y===P.y));
+  if(sp){const h=Math.floor(e.hp/2);e.hp-=h;e.child=true;G.en.push({...e,st:{},x:sp[0],y:sp[1],hp:h,flash:-1e4,lunge:-1e4});say(`${EN[e.type].name}が分裂した！`)}}
  if(first&&chance(abil('extra')/100)&&G.en.includes(e)){say('追加攻撃！');strike(e,t,mul,false)}
 }
 function kill(e){
  if(!G.en.includes(e))return;
  const D0=EN[e.type];if(D0.revive&&!e.revived&&chance(D0.revive)){e.revived=true;e.hp=Math.ceil(e.mhp/2);say(`${ename(e)}の骨が組み上がった！`);return}
  se('kill');G.en=G.en.filter(o=>o!==e);save.stats.kills++;save.book[e.type]=(save.book[e.type]||0)+1;if(e.elite)save.stats.elites++;
- const xp=Math.round((EN[e.type].xp+(EN[e.type].boss?0:eff()-1))*(e.elite?3:1)*(e.child?.5:1));say(`${ename(e)}を倒した！ ${xp} EXP`);
+ const xp=isAby()?Math.round((EN[e.type].boss?3000*eff()/66:Math.max(EN[e.type].xp,40)+eff()-1)*(e.elite?3:1)*(e.child?.5:1)):Math.round((EN[e.type].xp+(EN[e.type].boss?0:eff()-1))*(e.elite?3:1)*(e.child?.5:1));say(`${ename(e)}を倒した！ ${xp} EXP`);
  const ok=abil('onkill');if(ok)heal(ok);
  gainExp(xp);
  const mul=1+(abil('drop')+Math.min(60,P.luck*2))/100;
  const own=Object.keys(EQ).filter(k=>EQ[k].src===e.type);
- if(own.length&&chance((e.type==='mimic'?.25:e.elite?.3:.04)*mul))dropAt(e.x,e.y,{k:'eq',v:mkEq(pick(own))});
+ if(own.length&&chance((e.type==='mimic'?.25:e.elite?.3:isAby()?.06:.04)*mul))dropAt(e.x,e.y,{k:'eq',v:mkEq(pick(own))});
  else if(chance(.1*mul))dropAt(e.x,e.y,{k:'it',v:rollItem()});
  if(e.elite&&!G.en.some(o=>o.elite))G.chests.forEach(c=>{if(c.locked){c.locked=false;say('宝箱の封印が解けた！')}});
- if(D0.boss)bossDown(e,mul);
+ if(D0.boss)(isAby()?abyBossDown:bossDown)(e,mul);
  persist();
 }
+function abyBossDown(e,mul){
+ stopBgm();setTimeout(()=>se('boss'),250);setTimeout(()=>{if(G&&!G.over)playBgm('d6',true)},2600);
+ save.aby=save.aby||{bk:0};save.aby.bk++;if(e.type==='nihilis')save.aby.nk=(save.aby.nk||0)+1;
+ for(const o of [...G.en])if(o.minion){G.en=G.en.filter(x=>x!==o)}
+ G.chests.push({x:e.x,y:e.y-1>5?e.y-1:e.y+1,type:'gold',plus:1,boss:true});
+ for(let i=0;i<2;i++)dropAt(e.x,e.y,{k:'it',v:rollItem()});
+ const own=Object.keys(EQ).filter(k=>EQ[k].src===e.type);if(own.length&&chance((e.type==='nihilis'?.2:.08)*mul))dropAt(e.x,e.y,{k:'eq',v:mkEq(pick(own))});
+ if(chance(.12*mul)){const pool=Object.keys(EQ).filter(k=>EQ[k].abyB);dropAt(e.x,e.y,{k:'eq',v:mkEq(pick(pool))})}
+ G.st={x:19,y:15};say('深淵へ続く階段が現れた。');persist();
+ updVis();hud();setTimeout(()=>{if(!G||G.over)return;modal(`<h3 style="color:var(--gold)">${EN[e.type].name}を撃破！</h3><p>${G.floor}F の主を倒した。報酬の宝箱を開けてから、階段でさらに深く潜るか帰還するかを選べます。</p>`,[{label:'閉じる',pri:1}])},500)}
 function bossDown(e,mul){
  stopBgm();setTimeout(()=>se('boss'),250);setTimeout(()=>{if(G&&!G.over)playBgm('d'+G.d,true)},2600);
  const d=G.d,first=!save.bossKills[d];save.bossKills[d]=(save.bossKills[d]||0)+1;
@@ -1154,8 +1371,8 @@ function bossDown(e,mul){
  for(let i=0;i<2;i++)dropAt(e.x,e.y,{k:'it',v:rollItem()});
  if(chance(.08*mul)){const own=Object.keys(EQ).filter(k=>EQ[k].src===e.type);dropAt(e.x,e.y,{k:'eq',v:mkEq(pick(own))})}
  G.st={x:19,y:15};G.exit=true;say('帰還の魔法陣が現れた。');
- if(first){if(!save.cleared.includes(d))save.cleared.push(d);persist();
-  const nx=DUN[d];setTimeout(()=>{if(!G||G.over)return;modal(`<h3 style="color:var(--gold)">${EN[e.type].name}を撃破！</h3><div class="unl">${nx?`<svg viewBox="0 0 24 24" shape-rendering="crispEdges"><rect x="1" y="3" width="22" height="21" fill="#566c86"/><path d="M5 24V12h2v-2h2V9h6v1h2v2h2v12z" fill="#ffcd75"/><rect x="2" y="9" width="2" height="2" fill="#ffcd75"/><rect x="20" y="9" width="2" height="2" fill="#ffcd75"/></svg><p>${nx.name}「${nx.theme}」が解放された！</p>`:'<p>すべての迷宮を踏破した！</p>'}</div><p>実績「${ACH.find(a=>a.id==='boss'+d).n}」を獲得しました。報酬の黄金の宝箱を開けてから、魔法陣で帰還しましょう。</p>`,[{label:'閉じる',pri:1}])},500)}
+ if(first){if(!save.cleared.includes(d))save.cleared.push(d);if(d===5&&!save.skills.includes('barrier'))save.skills.push('barrier');persist();
+  const nx=DUN[d];setTimeout(()=>{if(!G||G.over)return;modal(`<h3 style="color:var(--gold)">${EN[e.type].name}を撃破！</h3><div class="unl">${nx?`<svg viewBox="0 0 24 24" shape-rendering="crispEdges"><rect x="1" y="3" width="22" height="21" fill="#566c86"/><path d="M5 24V12h2v-2h2V9h6v1h2v2h2v12z" fill="#ffcd75"/><rect x="2" y="9" width="2" height="2" fill="#ffcd75"/><rect x="20" y="9" width="2" height="2" fill="#ffcd75"/></svg><p>${nx.name}「${nx.theme}」が解放された！</p>`:(d===5?'<p>すべての迷宮を踏破した！</p><p>隠しダンジョン「終焉の深淵」の扉が開いた……！ ダンジョン選択から挑戦できます。</p><p>新しいスキル「聖なる結界」を習得した！（MP6：そのターンのダメージを無効化）</p>':'<p>すべての迷宮を踏破した！</p>')}</div><p>実績「${ACH.find(a=>a.id==='boss'+d).n}」を獲得しました。報酬の黄金の宝箱を開けてから、魔法陣で帰還しましょう。</p>`,[{label:'閉じる',pri:1}])},500)}
 }
 function gainExp(x){save.exp+=x;let up=0;while(save.exp>=need(save.lv)){save.exp-=need(save.lv);save.lv++;save.free+=3;up++}
  if(up){se('lvup');say(`レベルアップ！ Lv ${save.lv}（ポイント +${up*3}）`);fx(P.x,P.y,'LvUP','#ffcd75');G.interrupt=true}}
@@ -1164,12 +1381,15 @@ function dropAt(x,y,o){const spots=[[x,y],...D4.map(([dx,dy])=>[x+dx,y+dy]),[x+1
 function shot(x0,y0,x1,y1,col){G.proj.push({x0,y0,x1,y1,col,t0:performance.now()})}
 function hitPlayer(e,t,mul=1,ranged=false){
  e.lunge=t;
+ if(P.barrier){se('miss');fx(P.x,P.y,'無効','#fff6d0');say(`聖なる結界が${ename(e)}の攻撃を防いだ！`);return}
  if(chance(abil('eva')/100)){se('miss');fx(P.x,P.y,'MISS','#94b0c2');say(`${ename(e)}の攻撃をかわした！`);return}
  let d=dmg(eatk(e),pdef(),mul);d=Math.max(1,Math.round(d*(1-Math.min(50,abil('red'))/100)));
  if(P.guard){d=Math.max(1,Math.round(d*.4));P.guard=0;say('鉄壁の構えで受け止めた！')}
  se('hurt');P.hp=Math.max(0,P.hp-d);P.flash=t;G.interrupt=true;fx(P.x,P.y,d,'#ef7d57');if(P.st.sleep){delete P.st.sleep;say('目が覚めた！')}
  say(`${ename(e)}の${ranged?(EN[e.type].shotN||'矢'):mul>1&&EN[e.type].boss?(e.atkN||'攻撃'):'攻撃'}！ ${d} のダメージ。`);
  const inf=EN[e.type].inflict;if(inf&&P.hp>0&&chance(inf[1]))applySt(P,inf[0]);
+ if(EN[e.type].rinf&&P.hp>0&&chance(EN[e.type].rinf))applySt(P,pick(['poison','para','conf','sleep','curse']));
+ if(EN[e.type].drain&&e.hp<e.mhp){const hv=Math.min(e.mhp-e.hp,Math.round(d*EN[e.type].drain));if(hv>0){e.hp+=hv;fx(e.x,e.y,'+'+hv,'#a7f070');say(`${ename(e)}は命を喰らった！（HP ${hv} 回復）`)}}const inf2=EN[e.type].inflict2;if(inf2&&P.hp>0&&chance(inf2[1]))applySt(P,inf2[0]);
  const rf=Math.floor(d*abil('refl')/100);if(rf>0&&P.hp>0){e.hp-=rf;e.flash=t;fx(e.x,e.y,rf,'#d77bea');if(e.hp<=0){kill(e);return}}
  if(P.counter&&!ranged&&P.hp>0&&G.en.includes(e)){P.counter=0;say('カウンター！');strike(e,t,1,false)}
 }
@@ -1186,9 +1406,29 @@ function teleCells(e){
   const ax=Math.abs(P.x-e.x)>=Math.abs(P.y-e.y),dx=ax?Math.sign(P.x-e.x):0,dy=ax?0:Math.sign(P.y-e.y);let last=null;
   for(let i=1;i<=8;i++){const x=e.x+dx*i,y=e.y+dy*i;if(!pass(x,y)||G.roomAt[x+y*W]!==0)break;add(x,y);last=[x,y]}
   return {cells:out,n:'突進',msg:'死霊騎士が突進の構えをとった！',mul:2,cd:2,wait:1,dash:[dx,dy]}}
+ const line=(wide,len)=>{const ax=Math.abs(P.x-e.x)>=Math.abs(P.y-e.y),dx=ax?Math.sign(P.x-e.x):0,dy=ax?0:Math.sign(P.y-e.y);
+  for(let i=1;i<=len;i++){const x=e.x+dx*i,y=e.y+dy*i;if(!pass(x,y)||G.roomAt[x+y*W]!==0)break;add(x,y);if(wide){add(x+dy,y+dx);add(x-dy,y-dx)}}};
+ const cdv=e.enr?2:3;
+ if(T==='volcanos'){if(cheb(e.x,e.y,P.x,P.y)<=2&&chance(.55)){for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)if(dx||dy)add(e.x+dx,e.y+dy);return {cells:out,n:'大爆発',msg:'ヴォルカノスの体が赤熱した！（2ターン後に大爆発）',mul:e.enr?1.9:1.7,cd:cdv,wait:2}}
+  line(e.enr,9);return {cells:out,n:'炎のブレス',msg:e.enr?'ヴォルカノスが大きく息を吸い込んだ！（2ターン後に広範囲のブレス）':'ヴォルカノスが息を吸い込んだ！',mul:1.8,cd:cdv,wait:e.enr?2:1}}
+ if(T==='astrael'){e.rot=((e.rot||0)+1)%3;
+  if(e.rot===0){line(e.enr,9);return {cells:out,n:'光の剣',msg:e.enr?'審判者が光の大剣を振りかぶった！（2ターン後）':'審判者が光の剣を構えた！',mul:1.9,cd:cdv,wait:e.enr?2:1}}
+  if(e.rot===1){const L=e.enr?7:4;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]])for(let i=1;i<=L;i++){const x=e.x+dx*i,y=e.y+dy*i;if(!pass(x,y)||G.roomAt[x+y*W]!==0)break;add(x,y)}
+   return {cells:out,n:'光弾',msg:'審判者のまわりに光弾が浮かんだ！',mul:1.5,cd:cdv,wait:1}}
+  const par=(P.x+P.y)%2;for(let y=0;y<H;y++)for(let x=0;x<W;x++)if((x+y)%2===par&&!(x===e.x&&y===e.y))add(x,y);
+  return {cells:out,n:'光の格子',msg:'足元に光の格子が浮かび上がった！（1歩動けばよけられる）',mul:1.6,cd:cdv,wait:1}}
+ if(T==='nihilis'){e.rot=((e.rot||0)+1)%3;
+  if(e.rot===0){const dirs=e.enr?[[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]]:[[1,0],[-1,0],[0,1],[0,-1]];for(const [dx,dy] of dirs)for(let i=1;i<=12;i++){const x=e.x+dx*i,y=e.y+dy*i;if(!pass(x,y)||G.roomAt[x+y*W]!==0)break;add(x,y)}
+   return {cells:out,n:'虚無の十字',msg:e.enr?'ニヒリスのまわりに虚無の光が八方へ走った！':'ニヒリスの体から十字の闇が伸びた！',mul:1.8,cd:cdv,wait:1}}
+  if(e.rot===1){const hz=chance(.5);for(let k=-1;k<=1;k++)for(let i=0;i<W;i++){const x=hz?i:P.x+k,y=hz?P.y+k:i;add(x,y)}
+   return {cells:out,n:'崩壊の波',msg:`空間が${hz?'横':'縦'}に裂けはじめた！（2ターン後）`,mul:1.7,cd:cdv,wait:2}}
+  const r=G.rooms[0];let sx=P.x,sy=P.y;
+  for(let a=0;a<60;a++){const x=P.x+rnd(7)-3,y=P.y+rnd(7)-3;const dd=Math.max(Math.abs(x-P.x),Math.abs(y-P.y));if(dd>=3&&x>r.x&&y>r.y&&x<r.x+r.w-1&&y<r.y+r.h-1&&!(Math.abs(x-e.x)<=1&&Math.abs(y-e.y)<=1)){sx=x;sy=y;break}}
+  for(let y=r.y;y<r.y+r.h;y++)for(let x=r.x;x<r.x+r.w;x++)if(Math.max(Math.abs(x-sx),Math.abs(y-sy))>1&&!(x===e.x&&y===e.y))add(x,y);
+  return {cells:out,n:'終焉の刻',msg:'終焉の刻が迫る……！ 赤く光っていない場所へ逃げろ！（2ターン後）',mul:2.1,cd:cdv+1,wait:2}}
 }
 function summon(e,types,n){let k=0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,1],[1,-1],[-1,-1],[2,0],[-2,0]]){if(k>=n)break;const x=e.x+dx,y=e.y+dy;
- if(G.roomAt[x+y*W]===0&&walk(x,y)&&!enemyAt(x,y)&&!(x===P.x&&y===P.y)){const m=mkEnemy(pick(types),x,y,G.d*10);m.aware=true;m.minion=true;G.en.push(m);k++}}if(k)say(`${ename(e)}が手下を呼んだ！`)}
+ if(G.roomAt[x+y*W]===0&&walk(x,y)&&!enemyAt(x,y)&&!(x===P.x&&y===P.y)){const m=mkEnemy(pick(types),x,y,lvF());m.aware=true;m.minion=true;G.en.push(m);k++}}if(k)say(`${ename(e)}が手下を呼んだ！`)}
 function bossAct(e,t,dm){
  const D=EN[e.type];
  if(!e.woke){if(G.roomAt[P.x+P.y*W]!==0)return;e.woke=true;e.aware=true;e.cd=2;say(`${ename(e)}が動き出した！`);G.interrupt=true;return}
@@ -1204,50 +1444,60 @@ function bossAct(e,t,dm){
  if(e.type==='slimeking'){if(ph<.67&&!e.s1){e.s1=1;summon(e,['slime'],2)}if(ph<.34&&!e.s2){e.s2=1;summon(e,['slime'],3)}}
  if(e.type==='guardian'&&ph<.5&&!e.s1){e.s1=1;summon(e,['sentry'],2)}
  if(e.type==='dknight'&&ph<.5&&!e.s1){e.s1=1;summon(e,['skeleton','ghost'],2)}
+ if(e.type==='nihilis'&&ph<.5&&!e.enr){e.enr=1;G.interrupt=true;se('warn');fx(e.x,e.y,'覚醒！','#ff6b9a');say('ニヒリスが真の姿を現した！ 深淵の魔物が呼び寄せられる！');summon(e,['abslime','phantom','deater'],2)}
+ if((e.type==='volcanos'||e.type==='astrael')&&ph<.5&&!e.enr){e.enr=1;G.interrupt=true;se('warn');fx(e.x,e.y,e.type==='volcanos'?'激昂！':'翼を展開！','#ffcd75');say(e.type==='volcanos'?'ヴォルカノスが怒り狂った！ 攻撃が激しくなる！':'審判者が光の翼を広げた！ 攻撃範囲が広がる！')}
  e.cd--;
  const md=Math.abs(e.x-P.x)+Math.abs(e.y-P.y);
  if(e.cd<=0&&md<=9){const T=teleCells(e);if(T&&T.cells.length){e.tele=T;se('warn');say(T.msg);G.interrupt=true;return}}
- if(md===1){e.dir=dirOf(P.x-e.x,P.y-e.y);e.atkN='攻撃';hitPlayer(e,t);if(e.type==='dknight'&&P.hp>0){say('連続攻撃！');hitPlayer(e,t,.7)}return}
+ if(md===1){e.dir=dirOf(P.x-e.x,P.y-e.y);e.atkN='攻撃';hitPlayer(e,t,e.type==='volcanos'?1.3:e.type==='nihilis'?1.2:1);if(e.type==='dknight'&&P.hp>0){say('連続攻撃！');hitPlayer(e,t,.7)}return}
  if(D.slow&&G.turn%2)return;
  const opts=D4.map(([dx,dy])=>[e.x+dx,e.y+dy]).filter(([x,y])=>G.roomAt[x+y*W]===0&&walk(x,y)&&!enemyAt(x,y)&&!(x===P.x&&y===P.y));
  const d=dm[e.x+e.y*W];if(opts.length&&d>=0){const vals=opts.map(([x,y])=>dm[x+y*W]);const b=Math.min(...vals.filter(v=>v>=0));if(b<d)moveE(e,opts[vals.indexOf(b)])}
 }
 function enemiesAct(t){
  const dm=bfs(P.x,P.y);
- for(const e of [...G.en]){
-  if(!G.en.includes(e))continue;
+ const one=(e,second)=>{
   const D=EN[e.type];
-  if(D.boss){if(tickSt(e)&&e.hp<=0){kill(e);continue}bossAct(e,t,dm);if(P.hp<=0)return;continue}
-  if(tickSt(e)&&e.hp<=0){kill(e);continue}
-  if(e.st.sleep||e.st.para)continue;
-  if(D.slow&&G.turn%2)continue;
+  if(D.boss){if(!second&&tickSt(e)&&e.hp<=0){kill(e);return 0}bossAct(e,t,dm);if(P.hp<=0)return 1;return 0}
+  if(!second&&tickSt(e)&&e.hp<=0){kill(e);return 0}
+  if(e.st.sleep||e.st.para)return 0;
+  if(D.slow&&G.turn%2)return 0;
+  if(D.healer){e.hcd=(e.hcd||0)-1;const hurt=G.en.filter(o=>o!==e&&!EN[o.type].boss&&o.hp<o.mhp*.7&&Math.max(Math.abs(o.x-e.x),Math.abs(o.y-e.y))<=4).sort((a,b)=>a.hp/a.mhp-b.hp/b.mhp)[0];
+   if(hurt&&e.hcd<=0){const hv=Math.ceil(hurt.mhp*.3);hurt.hp=Math.min(hurt.mhp,hurt.hp+hv);e.hcd=3;fx(hurt.x,hurt.y,'+'+hv,'#a7f070');shot(e.x,e.y,hurt.x,hurt.y,'#a7f070');if(G.vis[e.x+e.y*W])say(`${ename(e)}が${ename(hurt)}を癒やした！`);return 0}}
   const md=Math.abs(e.x-P.x)+Math.abs(e.y-P.y),d=dm[e.x+e.y*W];
+  if(second&&md<=1)return 0;
   if(!e.aware&&(G.vis[e.x+e.y*W]||(d>=0&&d<=5)))e.aware=true;
   const opts=D4.map(([dx,dy])=>[e.x+dx,e.y+dy]).filter(([x,y])=>walk(x,y)&&!enemyAt(x,y)&&!(x===P.x&&y===P.y));
   const melee=()=>{e.dir=dirOf(P.x-e.x,P.y-e.y);hitPlayer(e,t)};
-  if(e.st.conf&&chance(.5)){if(!e.st.frz&&opts.length)moveE(e,pick(opts));continue}
-  if(e.type==='mush'&&Math.abs(e.x-P.x)<=1&&Math.abs(e.y-P.y)<=1&&G.turn%4===0){say('キノコが胞子をまいた！');se('spore');(G.sp=G.sp||[]).push({x:e.x,y:e.y,t0:performance.now()});fx(e.x,e.y,'胞子！','#d77bea');e.lunge=performance.now();if(chance(.5))applySt(P,'poison');G.interrupt=true;continue}
+  if(e.st.conf&&chance(.5)){if(!e.st.frz&&opts.length)moveE(e,pick(opts));return 0}
+  if(e.type==='mush'&&Math.abs(e.x-P.x)<=1&&Math.abs(e.y-P.y)<=1&&G.turn%4===0){say('キノコが胞子をまいた！');se('spore');(G.sp=G.sp||[]).push({x:e.x,y:e.y,t0:performance.now()});fx(e.x,e.y,'胞子！','#d77bea');e.lunge=performance.now();if(chance(.5))applySt(P,'poison');G.interrupt=true;return 0}
   if(D.charge&&e.aware){
    if(e.ready){e.ready=false;
     if(md>1&&lineClear(e,D.charge+1)){const dx=Math.sign(P.x-e.x),dy=Math.sign(P.y-e.y);while(Math.abs(P.x-e.x)+Math.abs(P.y-e.y)>1){e.x+=dx;e.y+=dy}
-     e.dir=dirOf(dx,dy);say(`${ename(e)}の突進！`);hitPlayer(e,t,1.5);if(P.hp<=0)return;continue}}
-   else if(md>1&&!e.st.frz&&lineClear(e,D.charge)){e.ready=true;e.dir=dirOf(Math.sign(P.x-e.x),Math.sign(P.y-e.y));say(`${ename(e)}が身構えた！`);G.interrupt=true;continue}
+     e.dir=dirOf(dx,dy);say(`${ename(e)}の突進！`);hitPlayer(e,t,1.5);if(P.hp<=0)return 1;return 0}}
+   else if(md>1&&!e.st.frz&&lineClear(e,D.charge)){e.ready=true;e.dir=dirOf(Math.sign(P.x-e.x),Math.sign(P.y-e.y));say(`${ename(e)}が身構えた！`);G.interrupt=true;return 0}
   }
-  if(D.ranged&&e.aware&&md>1&&lineClear(e,D.ranged)){e.dir=dirOf(Math.sign(P.x-e.x),Math.sign(P.y-e.y));shot(e.x,e.y,P.x,P.y,D.shotC||'#ffcd75');hitPlayer(e,t,1,true);if(P.hp<=0)return;continue}
-  if(md===1&&!e.flee){melee();if(P.hp<=0)return;continue}
-  if(e.st.frz||D.still)continue;
-  if(e.flee&&G.turn%2)continue;
+  if(e.rc>0)e.rc--;
+  if(D.ranged&&e.aware&&md>1&&!(e.rc>0)&&lineClear(e,D.ranged)){e.rc=D.rcd||(isAby()?2:0);e.dir=dirOf(Math.sign(P.x-e.x),Math.sign(P.y-e.y));shot(e.x,e.y,P.x,P.y,D.shotC||'#ffcd75');hitPlayer(e,t,1,true);if(P.hp<=0)return 1;return 0}
+  if(md===1&&!e.flee){melee();if(P.hp<=0)return 1;return 0}
+  if(e.st.frz||D.still)return 0;
+  if(e.flee&&G.turn%2)return 0;
   let tgt=null;
   if(opts.length){
    const vals=opts.map(([x,y])=>dm[x+y*W]);
    if(D.erratic&&chance(D.erratic))tgt=pick(opts);
    else if(e.aware&&d>=0){
-    if(e.flee||(D.ranged&&md<=2)){const b=Math.max(...vals);if(b>d)tgt=pick(opts.filter((_,i)=>vals[i]===b))}
+    if(e.flee||(D.ranged&&md<=2&&!D.nokite)){const b=Math.max(...vals);if(b>d)tgt=pick(opts.filter((_,i)=>vals[i]===b))}
     else{const b=Math.min(...vals);if(b>=0&&b<d)tgt=pick(opts.filter((_,i)=>vals[i]===b))}}
    else if(chance(.5))tgt=pick(opts);
   }
   if(tgt)moveE(e,tgt);
   else if(md===1){melee();if(P.hp<=0)return}
+ };
+ for(const e of [...G.en]){
+  if(!G.en.includes(e))continue;
+  if(one(e,false))return;
+  if(EN[e.type].fast&&G.en.includes(e)&&!e.st.sleep&&!e.st.para&&!e.st.frz&&e.aware&&one(e,true))return;
  }
 }
 
@@ -1265,7 +1515,7 @@ function act(type,dir){
   if(P.st.frz){say('凍りついて動けない！');return endTurn()}
   P.ox=P.x;P.oy=P.y;P.mt=performance.now();P.step=(P.step||0)+1;P.x=nx;P.y=ny;P.mp=Math.min(P.mmp,P.mp+1);
   if(nx===G.st.x&&ny===G.st.y){say('階段を見つけた。');G.interrupt=true}
-  const tr=at(G.traps,nx,ny);if(tr)trigger(tr);
+  const tr=at(G.traps,nx,ny);if(tr)trigger(tr);stepHaz();
   endTurn();
   if(G.over)return;
   const sp=at(G.springs,P.x,P.y);if(sp&&!sp.used){sp.used=true;heal(P.mhp);P.mp=P.mmp;hud();say('回復の泉だ。HPとMPが全回復した！')}
@@ -1292,22 +1542,23 @@ function swapPrompt(it){
   [{label:'そのまま'},{label:'着用する',pri:1,fn:()=>{
    save.col=save.col.filter(o=>o!==i);save.col.push(cur);save.eq[t]=i;recalc();persist();say(`${d.n}を着用した。`);endTurn()}}]);
 }
-function rollLoot(type){
+function rollLoot(type,fire){
  if(P.lucky){P.lucky=false;type={wood:'iron',iron:'gold',gold:'gold+','gold+':'gold+'}[type];say('幸運の加護が宝箱に宿った！')}
  const cons={wood:.55,iron:.25,gold:0,'gold+':0}[type];
  if(chance(cons))return {k:'it',v:rollItem()};
- const unk=Object.keys(SK).filter(k=>!save.skills.includes(k));if(unk.length&&chance({wood:.03,iron:.1,gold:.12,'gold+':.12}[type]))return {k:'sk',v:pick(unk)};
+ const unk=Object.keys(SK).filter(k=>!save.skills.includes(k)&&!SK[k].noBook);if(unk.length&&chance({wood:.03,iron:.1,gold:.12,'gold+':.12}[type]))return {k:'sk',v:pick(unk)};
  const L=Math.min(.6,P.luck*.02);
- const w={wood:[50,35,12,3,0],iron:[15,40,33,10,2],gold:[0,15,45,30,10],'gold+':[0,0,40,42,18]}[type].map((v,i)=>i>=2?v*(1+L*1.5):v);
+ const ab=isAby();
+ const w=(ab?{wood:[20,35,30,13,2,0],iron:[0,20,40,28,10,2],gold:[0,0,30,40,24,6],'gold+':[0,0,15,40,33,12]}:{wood:[50,35,12,3,0],iron:[15,40,33,10,2],gold:[0,15,45,30,10],'gold+':[0,0,40,42,18]})[type].map((v,i)=>i>=2?v*(1+L*1.5):v);
  let r=+wpick(Object.fromEntries(w.map((v,i)=>[i,v])));
- for(;r>=0;r--){const F=eff(),pool=Object.keys(EQ).filter(k=>EQ[k].r===r&&EQ[k].f<=F+1&&EQ[k].f>=F-12);if(pool.length)return {k:'eq',v:mkEq(pick(pool))}}
+ for(;r>=0;r--){const F=eff();let pool=Object.keys(EQ).filter(k=>EQ[k].r===r&&(ab?(EQ[k].aby&&!EQ[k].abyB)||(EQ[k].f>=36&&EQ[k].f<99):EQ[k].f<=F+1&&EQ[k].f>=F-12));if(fire&&chance(.8)){const fp=pool.filter(k=>EQ[k].fire);if(fp.length)pool=fp}if(pool.length)return {k:'eq',v:mkEq(pick(pool))}}
  return {k:'eq',v:mkEq('w_copper')};
 }
 function openChest(c){
  if(c.locked){say('封印されている。強敵を倒せば開くようだ。');return}
  G.chests=G.chests.filter(o=>o!==c);se('chest');
- if(c.mimic){const e=mkEnemy('mimic',c.x,c.y,G.floor);e.aware=true;G.en.push(e);say('宝箱はミミックだった！');G.interrupt=true;return endTurn()}
- save.stats.chests++;const L=rollLoot(c.boss?'gold+':c.type);
+ if(c.mimic){const e=mkEnemy('mimic',c.x,c.y,isAby()?eff():G.floor);e.aware=true;G.en.push(e);say('宝箱はミミックだった！');G.interrupt=true;return endTurn()}
+ save.stats.chests++;const L=rollLoot(c.boss||c.plus?'gold+':c.type,c.fire);
  say(`${{wood:'木の',iron:'鉄の',gold:'黄金の'}[c.type]}宝箱を開けた。`);
  if(L.k==='it'){if(addItem(L.v)){say(`${IT[L.v].name}を手に入れた！`);persist()}else{G.items.push({x:c.x,y:c.y,...L});say(`${IT[L.v].name}が出た。持ち物がいっぱいだ。`)}endTurn();return}
  const it={x:c.x,y:c.y,...L};G.items.push(it);endTurn();if(!G.over)pickup(it);
@@ -1341,12 +1592,17 @@ function runEvent(ev){
    modal(`<h3>武器の祭壇</h3><p>${EQ[w.id].n}に新しい力を宿せる。</p>`,[{label:'やめる'},{label:'力を宿す',pri:1,fn:()=>{done();let key;do key=pick(AFF.w);while(w.rolls.some(r=>r[0]===key)&&w.rolls.length<4);if(w.rolls.some(r=>r[0]===key))key=pick(Object.keys(ABI).filter(k=>!w.rolls.some(r=>r[0]===k)));const [lo,hi]=ABI[key].r;w.rolls.push([key,lo+rnd(hi-lo+1)]);recalc();persist();say(`${EQ[w.id].n}に「${abTxt(...w.rolls.at(-1))}」が宿った！`)}}])},
   forge:()=>{const c=k=>{const i=save.eq[k];if(i.plus>=5){say('これ以上は強化できない。');return}done();i.plus++;recalc();persist();say(`${EQ[i.id].n}を強化した！（+${i.plus}）`)};
    modal('<h3>古代の鍛冶場</h3><p>まだ火が残っている。装備を一つ鍛えられそうだ。（+1、最大+5）</p>',[{label:'武器を鍛える',pri:1,fn:()=>c('w')},{label:'防具を鍛える',pri:1,fn:()=>c('a')}])},
+  hotaltar:()=>{const c=Math.ceil(P.mhp*.3);const pay=fn=>{if(P.hp<=c){say('HPが足りない。');return}done();P.hp-=c;fx(P.x,P.y,c,'#ef7d57');fn();recalc();persist()};
+   modal(`<h3>灼熱の祭壇</h3><p>煮えたぎる祭壇が、命の熱と引き換えに力を授けるという。</p><p>（HP ${c} を捧げて、ひとつ選ぶ）</p>`,[{label:'立ち去る'},
+    {label:'攻撃力+4',pri:1,fn:()=>pay(()=>{P.buff+=4;say('灼熱の力が宿った！ 攻撃力 +4（この探索中）')})},
+    {label:'防御力+4',pri:1,fn:()=>pay(()=>{P.dbuff=(P.dbuff||0)+4;say('灼熱の守りが宿った！ 防御力 +4（この探索中）')})},
+    {label:'装備を鍛える',pri:1,fn:()=>pay(()=>{const i=save.eq[chance(.5)?'w':'a'];if(i.plus<5){i.plus++;say(`${EQ[i.id].n}が灼熱で鍛えられた！（+${i.plus}）`)}else{P.buff+=4;say('装備は鍛えきっている。代わりに攻撃力 +4')}})}])},
   luck:()=>{done();P.lucky=true;modal('<h3>幸運の泉</h3><p>泉に手を浸すと、体がほのかに光った。次に開ける宝箱の中身が良くなる。</p>',[{label:'閉じる',pri:1}])}};
  E[ev.type]();
 }
 function frontLine(max){const [dx,dy]=DIRS[P.dir],cells=[];for(let i=1;i<=max;i++){const x=P.x+dx*i,y=P.y+dy*i;if(!walk(x,y))break;cells.push([x,y]);const e=enemyAt(x,y);if(e)return {e,cells}}return {e:null,cells}}
 function revealMap(){for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(G.m[y][x]===0||D4.some(([dx,dy])=>pass(x+dx,y+dy)))G.seen[x+y*W]=1}
-function afterLand(){const tr=at(G.traps,P.x,P.y);if(tr)trigger(tr)}
+function afterLand(){const tr=at(G.traps,P.x,P.y);if(tr)trigger(tr);stepHaz()}
 function useSkill(id){
  closeSheet();const s=SK[id],t=performance.now(),[dx,dy]=DIRS[P.dir];
  if(P.mp<s.mp){say('MPが足りない。');return}
@@ -1360,6 +1616,7 @@ function useSkill(id){
  if(id==='kama'){const {e,cells}=frontLine(5);const end=cells.at(-1)||[P.x+dx,P.y+dy];shot(P.x,P.y,end[0],end[1],'#73eff7');if(e)strike(e,t,.9,false);else say('何にも当たらなかった。')}
  if(id==='guard'){P.guard=10;say('鉄壁の構えをとった。')}
  if(id==='counter'){P.counter=10;say('反撃の構えをとった。')}
+ if(id==='barrier'){P.barrier=1;fx(P.x,P.y,'結界','#fff6d0');say('聖なる結界が身を包んだ！ このターンのダメージを無効化する。')}
  if(id==='warp'){P.x=dest[0];P.y=dest[1];afterLand()}
  endTurn();
  if(id==='warp'&&!G.over){const it=itemAt(P.x,P.y);if(it)pickup(it)}
@@ -1393,8 +1650,8 @@ function endTurn(){
  const one=()=>{G.turn++;save.stats.turns++;
   if(P.guard)P.guard--;if(P.counter)P.counter--;
   if(G.turn%3===0&&P.hp<P.mhp&&!P.st.poison&&!P.st.burn)P.hp++;
-  tickSt(P);
-  if(P.hp>0)enemiesAct(t)};
+  tickSt(P);ventTick();beamTick();
+  if(P.hp>0)enemiesAct(t);P.barrier=0};
  one();
  for(let g=0;(P.st.para||P.st.sleep)&&P.hp>0&&g<20;g++){say(P.st.sleep?'眠っている……':'体が痺れて動けない……');one()}
  for(const tr of G.traps)if(!tr.seen&&Math.abs(tr.x-P.x)<=1&&Math.abs(tr.y-P.y)<=1&&chance(.08+Math.min(.3,P.luck*.01))){tr.seen=true;say('罠を見つけた！');G.interrupt=true}
@@ -1406,13 +1663,17 @@ function endTurn(){
 }
 function die(){
  if(G.over)return;G.over=true;saveRun();stopBgm();se('die');save.stats.deaths++;persist();say('力尽きた……');
- setTimeout(()=>{closeModal();modal(`<h3>探索失敗</h3><p>${DUN[G.d-1].name} ${G.floor}F で力尽きた。</p><p>レベル・装備・アイテム・図鑑などの成果はすべて残っています。次の挑戦は1Fからです。</p>`,[{label:'ホームへ',pri:1,fn:()=>show('home')}])},700);
+ setTimeout(()=>{closeModal();modal(`<h3>探索失敗</h3><p>${DN(G.d).name} ${G.floor}F で力尽きた。</p>${G.d===6?`<p>最高到達記録：${save.bestD[6]||0}F</p>`:''}<p>レベル・装備・アイテム・図鑑などの成果はすべて残っています。次の挑戦は1Fからです。</p>`,[{label:'ホームへ',pri:1,fn:()=>show('home')}])},700);
 }
 function descend(){
  $('#stairBtn').hidden=true;se('stairs');
  if(G.exit){G.over=true;saveRun();persist();const d=G.d;modal(`<h3 style="color:var(--gold)">${DUN[d-1].name} 踏破！</h3><p>帰還の魔法陣でホームへ戻った。</p><p>ボス撃破 ${save.bossKills[d]}回目。ボスは何度でも挑戦でき、専用装備を狙えます。</p>`,[{label:'ホームへ',pri:1,fn:()=>show('home')}]);return}
+ if(isAby()&&G.boss){modal(`<h3>深淵の階段</h3><p>さらに深く潜るか、ここで帰還するかを選べます。</p><p>現在 ${G.floor}F ／ 最高到達 ${save.bestD[6]||0}F</p>`,[{label:'帰還する',fn:()=>{G.over=true;saveRun();persist();show('home');toast('終焉の深淵から帰還した')}},{label:'さらに深く',pri:1,fn:()=>{newFloor(G.d,G.floor+1);if(bossF(G.d,G.floor))bossIntro()}}]);return}
  newFloor(G.d,G.floor+1);
- if(G.floor===10)setTimeout(()=>modal(`<h3>10F ボスの間</h3><p>${EN[DUN[G.d-1].boss].name}が待ち構えている。</p><p>赤く光るマスは次のターンに攻撃が来る場所です。その外へ逃げましょう。</p>`,[{label:'挑む',pri:1}]),200);
+ if(bossF(G.d,G.floor))bossIntro();
+}
+function bossIntro(){const bs=G.en.find(e=>EN[e.type].boss);if(!bs)return;const bn=EN[bs.type].name,fl=G.floor;
+ setTimeout(()=>modal(`<h3>${fl}F ボスの間</h3><p>${bn}が待ち構えている。</p><p>赤く光るマスは次のターンに攻撃が来る場所です。その外へ逃げましょう。</p>`,[{label:'挑む',pri:1}]),200);
 }
 $('#stairBtn').onclick=descend;
 $('#quit').onclick=()=>modal(`<h3>ホームに戻りますか？</h3><p><b style="color:var(--gold);font-weight:400">中断</b>：今の階・HP・地図を残してホームに戻ります。ホームの「探索を再開」で続きから遊べます。中断中は装備・アイテム・合成を変更できません。</p><p><b style="color:var(--gold);font-weight:400">撤退</b>：探索を終えてホームに戻ります。成果は残りますが、次の挑戦は1Fからです。</p>`,[{label:'続ける'},{label:'中断する',fn:()=>{saveRun();G.over=true;show('home');toast('探索を中断しました')}},{label:'撤退する',pri:1,fn:()=>{persist();show('home')}}]);
@@ -1469,6 +1730,7 @@ addEventListener('keydown',e=>{
 const mini=$('#mini'),mctx=mini.getContext('2d'),mimg=mctx.createImageData(W,H);
 function paintMap(img){const d=img.data,set=(x,y,c)=>{const i=(x+y*W)*4;d[i]=c[0];d[i+1]=c[1];d[i+2]=c[2];d[i+3]=255};
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const k=x+y*W;set(x,y,!G.seen[k]?[11,15,20]:G.m[y][x]?[38,43,68]:G.vis[k]?[56,183,100]:[37,113,121])}
+ if(G.hz)for(let i=0;i<W*H;i++){if(!G.seen[i]||!G.hz[i])continue;set(i%W,(i/W)|0,({2:[255,240,176],4:[168,216,255],5:[141,93,189],6:[255,205,117]})[G.hz[i]]||[239,125,87])}
  for(const t of G.traps)if(t.seen)set(t.x,t.y,[177,62,83]);
  for(const c of G.chests)if(G.seen[c.x+c.y*W]||G.reveal)set(c.x,c.y,[255,205,117]);
  if(G.seen[G.st.x+G.st.y*W])set(G.st.x,G.st.y,[244,244,244]);
@@ -1477,7 +1739,7 @@ function paintMap(img){const d=img.data,set=(x,y,c)=>{const i=(x+y*W)*4;d[i]=c[0
 function drawMini(){paintMap(mimg);mctx.putImageData(mimg,0,0)}
 function openMap(){
  if(!G||G.over||busy())return;
- modal(`<h3>${DUN[G.d-1].name} ${G.floor}F の地図</h3><canvas id="mapc" width="40" height="40"></canvas><p class="lg"><i style="background:#ffff00"></i>自分 <i style="background:#f4f4f4"></i>階段 <i style="background:#ff5a5a"></i>敵 <i style="background:#ffcd75"></i>宝箱 <i style="background:#b13e53"></i>罠</p>`,[{label:'閉じる',pri:1}]);
+ modal(`<h3>${DN(G.d).name} ${G.floor}F の地図</h3><canvas id="mapc" width="40" height="40"></canvas><p class="lg"><i style="background:#ffff00"></i>自分 <i style="background:#f4f4f4"></i>階段 <i style="background:#ff5a5a"></i>敵 <i style="background:#ffcd75"></i>宝箱 <i style="background:#b13e53"></i>罠</p>`,[{label:'閉じる',pri:1}]);
  const c=$('#mapc').getContext('2d'),img=c.createImageData(W,H);paintMap(img);c.putImageData(img,0,0);
 }
 
@@ -1536,6 +1798,23 @@ function draw(t){
   if(G.m[y][x]===1&&!(y+1<H&&G.m[y+1][x]===0)){c.fillStyle=TH.cp[1];if(x+1<W&&G.m[y][x+1]===0)c.fillRect(px+s-p,py,p,s);if(x>0&&G.m[y][x-1]===0)c.fillRect(px,py,p,s)}
   if(G.m[y][x]===0){c.fillStyle='rgba(0,0,0,.32)';if(y>0&&G.m[y-1][x]===1)c.fillRect(px,py,s,p*3);c.fillStyle='rgba(0,0,0,.2)';if(x>0&&G.m[y][x-1]===1)c.fillRect(px,py,p*2,s)}}
  const lights=[];
+ if(G.hz)for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=x+y*W,k=G.hz[i];if(!k||!G.seen[i])continue;const px=ox+x*s,py=oy+y*s;
+  if(k===1){c.fillStyle='#8a1e1e';c.fillRect(px,py,s,s);const hh=hsh(x,y);for(let b=0;b<5;b++){const ph=(t/900+b*.37+(hh%7)*.1)%1,bx=((hh>>(b*3))%12)+2,by=((hh>>(b*2+1))%12)+2;c.fillStyle=b%2?'#ef7d57':'#ffcd75';const z=2+((b+hh)%3);c.fillRect(px+(bx-z/2)*p,py+(by-z/2+Math.sin(ph*6.28)*1)*p,z*p,z*p)}
+   c.fillStyle='#b13e53';c.fillRect(px,py,s,p);lights.push([px+s/2,py+s/2,'#ef7d57',.6])}
+  if(k===2){const a=RM?.4:.3+.15*Math.sin(t/300+x+y);c.fillStyle=`rgba(255,240,176,${a})`;c.fillRect(px+p,py+p,s-2*p,s-2*p);c.fillStyle='#fff6d0';c.fillRect(px+p*7,py+p*3,p*2,p*10);c.fillRect(px+p*3,py+p*7,p*10,p*2);lights.push([px+s/2,py+s/2,'#ffcd75',.7])}
+  if(k===4){const dir=G.wdir&&G.wdir[i],[dx,dy]=DIRS[dir]||[0,-1],o=RM?0:((t/120)%4)-2;c.fillStyle='rgba(65,166,246,.35)';c.fillRect(px+p,py+p,s-2*p,s-2*p);c.fillStyle='#29366f';
+   const ar=[[3,7,6,2],[8,4,1,8],[9,5,1,6],[10,6,1,4],[11,7,1,2]];for(const [ax,ay,aw,ah] of ar){let rx,ry,rw,rh;
+    if(dir==='right'){rx=ax;ry=ay;rw=aw;rh=ah}else if(dir==='left'){rx=16-ax-aw;ry=ay;rw=aw;rh=ah}else if(dir==='down'){rx=ay;ry=ax;rw=ah;rh=aw}else{rx=ay;ry=16-ax-aw;rw=ah;rh=aw}
+    c.fillRect(px+(rx+dx*o)*p,py+(ry+dy*o)*p,rw*p,rh*p)}}
+  if(k===5){const a=RM?.8:.6+.25*Math.sin(t/260+x*2+y);c.fillStyle='#0f0c16';c.fillRect(px+p*2,py+p*2,s-4*p,s-4*p);c.fillStyle=`rgba(141,93,189,${a})`;c.fillRect(px+p*4,py+p*4,s-8*p,s-8*p);c.fillStyle='#05040a';c.fillRect(px+p*6,py+p*6,p*4,p*4);lights.push([px+s/2,py+s/2,'#8d5dbd',.5])}
+  if(k===6){c.fillStyle='#3a2a10';c.fillRect(px+p*3,py+p*2,p*10,p*13);c.fillStyle='#c9a46a';c.fillRect(px+p*4,py+p*10,p*8,p*4);c.fillStyle='#fff6d0';c.fillRect(px+p*6,py+p*3,p*4,p*8);c.fillStyle='#ffcd75';c.fillRect(px+p*7,py+p*4,p*2,p*6);lights.push([px+s/2,py+s/2,'#ffcd75',.9])}
+  if(k===3){c.fillStyle='#1a0808';c.fillRect(px+p*3,py+p*4,p*10,p*9);c.fillStyle='#5d3a3a';c.fillRect(px+p*2,py+p*3,p*12,p*2);c.fillRect(px+p*2,py+p*12,p*12,p*2);c.fillStyle='#ef7d57';c.fillRect(px+p*6,py+p*7,p*4,p*3)}}
+ if(G.beams)for(const b of G.beams){if(!G.seen[b.x+b.y*W])continue;
+  if(b.warn){const a=RM?.3:.15+.18*Math.abs(Math.sin(t/140));for(const [x,y] of b.cells){const px=ox+x*s,py=oy+y*s;c.fillStyle=`rgba(255,90,58,${a+.08})`;c.fillRect(px,py,s,s);c.strokeStyle='rgba(239,125,87,.9)';c.lineWidth=2;c.strokeRect(px+1,py+1,s-2,s-2);c.fillStyle='rgba(255,246,208,.8)';if(b.ax==='h')c.fillRect(px,py+s/2-p,s,p*2);else c.fillRect(px+s/2-p,py,p*2,s)}}
+  if(b.t0&&t-b.t0<500){const q=(t-b.t0)/500;c.globalAlpha=1-q;for(const [x,y] of b.cells){const px=ox+x*s,py=oy+y*s;c.fillStyle='#fff6d0';if(b.ax==='h')c.fillRect(px,py+s/2-p*3,s,p*6);else c.fillRect(px+s/2-p*3,py,p*6,s);c.fillStyle='#ffffff';if(b.ax==='h')c.fillRect(px,py+s/2-p,s,p*2);else c.fillRect(px+s/2-p,py,p*2,s)}c.globalAlpha=1;lights.push([ox+b.x*s+s/2,oy+b.y*s+s/2,'#ffcd75',1.6])}}
+ if(G.vents)for(const v of G.vents){if(!G.seen[v.x+v.y*W])continue;const px=ox+v.x*s,py=oy+v.y*s;
+  if(v.warn){const a=RM?.35:.2+.2*Math.abs(Math.sin(t/140));c.fillStyle=`rgba(255,90,58,${a})`;c.fillRect(px-s,py-s,s*3,s*3);c.strokeStyle='#ef7d57';c.lineWidth=2;c.strokeRect(px-s+2,py-s+2,s*3-4,s*3-4)}
+  if(v.t0&&t-v.t0<600){const q=(t-v.t0)/600;for(let f=0;f<14;f++){const fx2=px-s+((f*37)%30)/30*s*3,fy=py+s*1.6-q*s*2.6-((f*13)%10)/10*s;c.fillStyle=f%3?'#ef7d57':'#ffcd75';c.globalAlpha=1-q;const z=p*(4-q*2);c.fillRect(fx2,fy,z,z*1.4)}c.globalAlpha=1;lights.push([px+s/2,py+s/2,'#ffb347',1.6])}}
  for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=x+y*W;if(!G.seen[i]||!G.deco)continue;const px=ox+x*s,py=oy+y*s,dk=G.deco[i],wd=G.wd[i];
   if(dk){c.drawImage(PROP[dk],px,py,s,s);if(LIGHT[dk])lights.push([px+s/2,py+s*.55,LIGHT[dk],1])}
   if(wd){const fl=RM?0:Math.floor(t/120+x*3)%3;

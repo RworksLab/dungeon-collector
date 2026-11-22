@@ -167,6 +167,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .lk{font-size:12px;color:var(--slate)}
 .seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.seg button{min-height:48px;background:var(--deep)}.seg button.on{background:var(--leaf);color:#0f1018}
 .dang{background:var(--red);min-height:48px;width:100%}
+.bulkb{width:100%;min-height:44px;margin:4px 0 6px;background:var(--deep);color:var(--ink)}
+.bqs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.bqs button{min-height:44px;background:var(--panel);color:var(--ink);font-size:14px}
+.brow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;border-bottom:2px solid var(--deep);padding:4px 0;cursor:pointer}
+.brow .ck{width:30px;height:30px;border:3px solid var(--dim);border-radius:6px;display:grid;place-items:center;font-size:18px;color:#0f1018}
+.brow.on .ck{background:var(--org);border-color:var(--org)}.brow.on .eqc{outline:2px solid var(--org)}
+.bfoot{position:sticky;bottom:0;background:var(--bg);padding:8px 0 calc(8px + env(safe-area-inset-bottom));border-top:2px solid var(--deep)}
 #toast{position:fixed;left:50%;top:calc(env(safe-area-inset-top) + 64px);transform:translate(-50%,-20px);background:var(--gold);color:#0f1018;border:3px solid #0f1018;border-radius:6px;padding:8px 16px;font-size:15px;z-index:20;opacity:0;pointer-events:none;white-space:nowrap}
 #toast.on{animation:tst 2.6s}
 @keyframes tst{0%{opacity:0;transform:translate(-50%,-20px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,0)}}
@@ -458,7 +464,7 @@ function mkEq(id){const d=EQ[id],[a,b]=RAR[d.r].k,n=a+rnd(b-a+1),rolls=[];
  return {id,uid:uidc++,star:1,plus:0,rolls}}
 const DEF={cleared:[],book:{},eqBook:{},inv:[{id:'herb',n:3}],skills:['spin','gale'],lv:1,exp:0,free:0,pts:{hp:0,atk:0,def:0,mp:0,luck:0},eq:null,col:[],stats:{runs:0,deaths:0,kills:0,turns:0,best:0,chests:0,elites:0,synth:0,runs3:0},bossKills:{},bestD:{},opt:{dpad:'right',bgm:5,se:7},chr:0,itBook:{herb:1},store:[],star:{},ach:{},title:''};
 let save=load();
-const VERSION='1.1.0',SAVE_VER=1;
+const VERSION='1.1.1',SAVE_VER=1;
 const DEV=(()=>{try{return location.hash==='#dev'}catch(e){return false}})();
 function load(){let s=null;try{s=JSON.parse(localStorage.getItem('dungeon_rpg_v3'))}catch(e){}
  s=Object.assign(structuredClone(DEF),s||{});s.stats=Object.assign(structuredClone(DEF.stats),s.stats);s.pts=Object.assign(structuredClone(DEF.pts),s.pts);s.opt=Object.assign(structuredClone(DEF.opt),s.opt);
@@ -932,7 +938,8 @@ function openEquipHome(keep,tab){
  const rows=list.length?list.map(i=>`<div class="col"><div>${eqCard(i,null,cur,true)}</div>${btn(i)}</div>`).join(''):`<p>まだ${TN[t]}がありません。ダンジョンで拾った${TN[t]}がここに入ります。</p>`;
  page('装備',`${L?LOCKMSG:''}<div class="tabs eqtabs">${['w','a'].map(k=>`<button class="px${k===t?' on':''}" data-et="${k}">${TN[k]}（${cnt(k)}）</button>`).join('')}</div>
   <h3 class="sh3">着用中の${TN[t]}</h3><div class="col"><div>${eqCard(cur)}</div>${btn(cur)}</div>
-  <h3 class="sh3">${TN[t]}一覧</h3><p style="font-size:13px;color:var(--dim)">${VN[t]}の高い順。▲▼は着用中との差です。合成はホームの「合成」から。</p>${rows}`,null,keep);
+  <h3 class="sh3">${TN[t]}一覧</h3><p style="font-size:13px;color:var(--dim)">${VN[t]}の高い順。▲▼は着用中との差です。合成はホームの「合成」から。</p>${list.length&&!L?`<button class="px bulkb" id="bulkGo">まとめて捨てる</button>`:''}${rows}`,null,keep);
+ if($('#bulkGo'))$('#bulkGo').onclick=()=>openBulkDis(t);
  const find=u=>allEq().find(o=>o.uid==u);
  $$('[data-et]').forEach(b=>b.onclick=()=>openEquipHome(false,b.dataset.et));
  $$('[data-wear]').forEach(b=>b.onclick=()=>{const i=find(b.dataset.wear),tt=EQ[i.id].t;save.col=save.col.filter(o=>o!==i);save.col.push(save.eq[tt]);save.eq[tt]=i;persist();openEquipHome(true)});
@@ -940,6 +947,25 @@ function openEquipHome(keep,tab){
  $$('[data-dis]').forEach(b=>b.onclick=()=>{const i=find(b.dataset.dis),d=EQ[i.id];
   modal(`<h3>捨てますか？</h3>${eqCard(i)}<p>捨てた装備は元に戻せません。図鑑の登録は残ります。</p>`,[{label:'やめる'},{label:'捨てる',fn:()=>{save.col=save.col.filter(o=>o!==i);persist();openEquipHome(true);toast(`${d.n}を捨てた`)}}])});
 }
+// まとめて捨てる：チェックを入れた装備を一括で捨てる（着用中の装備は対象外）
+function openBulkDis(t,sel){
+ sel=sel||new Set();const TN={w:'武器',a:'防具'},cur=save.eq[t];
+ const list=save.col.filter(i=>EQ[i.id].t===t).sort((a,b)=>eqVal(b)-eqVal(a)||EQ[b.id].r-EQ[a.id].r||a.id.localeCompare(b.id)||b.star-a.star);
+ const has3=id=>allEq().some(o=>o.id===id&&o.star>=3);
+ const Q={s3:{n:'★3獲得済み',f:i=>i.star<3&&has3(i.id)},nor:{n:'追加能力なし',f:i=>i.star<2&&!i.rolls.length},weak:{n:'着用中より弱い',f:i=>i.star<2&&eqVal(i)<eqVal(cur)},low:{n:'コモン・アンコモン',f:i=>i.star<2&&EQ[i.id].r<=1}};
+ const draw=keep=>{
+  page('まとめて捨てる',`<div class="tabs eqtabs">${['w','a'].map(k=>`<button class="px${k===t?' on':''}" data-bt="${k}">${TN[k]}</button>`).join('')}</div>
+   <p style="font-size:13px;color:var(--dim)">捨てる装備をタップして選びます。下のボタンで条件に合う装備をまとめて選べます（★2以上は「★3獲得済み」以外では選ばれません）。着用中の装備は表示されません。</p>
+   <div class="bqs">${Object.entries(Q).map(([k,q])=>`<button class="px" data-q="${k}">${q.n}（${list.filter(q.f).length}）</button>`).join('')}<button class="px" data-q="all">すべて選ぶ</button><button class="px" data-q="none">選択を解除</button></div>
+   ${list.length?list.map(i=>`<div class="brow${sel.has(i.uid)?' on':''}" data-bu="${i.uid}"><div class="ck">${sel.has(i.uid)?'✓':''}</div><div>${eqCard(i,null,cur,true)}</div></div>`).join(''):`<p>捨てられる${TN[t]}はありません。</p>`}
+   <div class="bfoot"><button class="px dang" id="bdo" ${sel.size?'':'disabled'}>選んだ ${sel.size} 個を捨てる</button></div>`,()=>openEquipHome(false,t),keep);
+  $$('[data-bt]').forEach(b=>b.onclick=()=>openBulkDis(b.dataset.bt));
+  $$('[data-bu]').forEach(r=>r.onclick=()=>{const u=+r.dataset.bu;sel.has(u)?sel.delete(u):sel.add(u);draw(true)});
+  $$('[data-q]').forEach(b=>b.onclick=()=>{const k=b.dataset.q;if(k==='none')sel.clear();else for(const i of list)if(k==='all'||Q[k].f(i))sel.add(i.uid);draw(true)});
+  if($('#bdo'))$('#bdo').onclick=()=>{const tg=list.filter(i=>sel.has(i.uid));if(!tg.length)return;const st=tg.filter(i=>i.star>=2).length,hi=tg.filter(i=>EQ[i.id].r>=4).length;
+   modal(`<h3>${tg.length}個の装備を捨てますか？</h3><p>捨てた装備は元に戻せません。図鑑の登録は残ります。</p>${st||hi?`<p style="color:var(--gold)">${st?`★2以上が ${st}個`:''}${st&&hi?'、':''}${hi?`レジェンダリー以上が ${hi}個`:''} 含まれています。</p>`:''}`,
+    [{label:'やめる'},{label:'捨てる',fn:()=>{const S=new Set(tg);save.col=save.col.filter(o=>!S.has(o));persist();toast(`${tg.length}個の装備を捨てた`);openBulkDis(t)}}])}};
+ draw(false)}
 const synGroups=()=>{const g={};for(const i of allEq()){if(i.star>=3)continue;const k=i.id+'_'+i.star;(g[k]=g[k]||[]).push(i)}return Object.values(g)};
 const canSyn=gr=>gr.filter(i=>!isWorn(i)).length>=1&&gr.length>=2;
 function openSynthHome(keep){
@@ -1007,10 +1033,12 @@ function openOpt(){
   <p style="margin-top:18px">十字キーの位置</p><div class="seg"><button class="px${save.opt.dpad==='left'?' on':''}" data-dp="left">左</button><button class="px${save.opt.dpad==='right'?' on':''}" data-dp="right">右</button></div>
   ${DEV?`<h3 class="sh3" style="margin-top:22px">開発用（#dev のときだけ表示）</h3>
   <p>全ダンジョン開放</p><div class="seg"><button class="px${save.opt.allOpen?'':' on'}" data-ao="0">オフ</button><button class="px${save.opt.allOpen?' on':''}" data-ao="1">オン</button></div><p style="font-size:13px;color:var(--dim)">ボスを倒していなくても、すべての迷宮に1Fから挑戦できます。踏破の記録や実績は変わりません。</p>
-  <p style="margin-top:14px">ボスから挑戦</p><div class="seg"><button class="px${save.opt.test?'':' on'}" data-tm="0">オフ</button><button class="px${save.opt.test?' on':''}" data-tm="1">オン</button></div><p style="font-size:13px;color:var(--dim)">オンにすると、ダンジョン選択に「10F ボスから」ボタンが出ます（未解放の迷宮も含む）。</p><p style="margin-top:14px">レベル（いま Lv ${save.lv}）</p><div class="seg"><button class="px" data-lvu="10">+10</button><button class="px" data-lvu="30">+30</button></div><p style="font-size:13px;color:var(--dim)">上がった分のポイント（1Lvごとに3）は、キャラクター画面で振り分けてください。</p>`:''}
+  <p style="margin-top:14px">ボスから挑戦</p><div class="seg"><button class="px${save.opt.test?'':' on'}" data-tm="0">オフ</button><button class="px${save.opt.test?' on':''}" data-tm="1">オン</button></div><p style="font-size:13px;color:var(--dim)">オンにすると、ダンジョン選択に「10F ボスから」ボタンが出ます（未解放の迷宮も含む）。</p><p style="margin-top:14px">レベル（いま Lv ${save.lv}）</p><div class="seg"><button class="px" data-lvu="10">+10</button><button class="px" data-lvu="30">+30</button></div><p style="font-size:13px;color:var(--dim)">上がった分のポイント（1Lvごとに3）は、キャラクター画面で振り分けてください。</p><p style="margin-top:14px">テスト用の装備</p><button class="px" id="devGear" style="width:100%;min-height:44px">武器・防具を10個ずつもらう</button><p style="font-size:13px;color:var(--dim)">いろいろなレアリティ・★・追加能力の装備をランダムに受け取ります（同じ種類の重複や★3も含む）。</p>`:''}
   <p style="margin-top:18px">データ</p><p style="font-size:13px;color:var(--dim)">進行データはこのブラウザ内に保存されます。ブラウザのデータ削除や、iPhoneのSafariで長く開かなかった場合などに消えることがあるので、ときどきバックアップしてください。機種変更にも使えます。</p>
   <div class="bk2"><button class="px" id="bkOut">バックアップを書き出す</button><button class="px" id="bkIn">バックアップから復元</button></div><button class="px dang" id="reset">セーブデータを消す</button><p style="font-size:12px;color:var(--slate);text-align:center;margin-top:16px">ダンジョンコレクター v${VERSION}</p>`);
  $$('[data-dp]').forEach(b=>b.onclick=()=>{save.opt.dpad=b.dataset.dp;persist();applyOpt();openOpt()});
+ if($('#devGear'))$('#devGear').onclick=()=>{for(const t of ['w','a']){const ids=Object.keys(EQ).filter(k=>EQ[k].t===t&&!hideEQ(k));const pk=[];for(let n=0;n<4;n++)pk.push(pick(ids));
+   for(let n=0;n<10;n++){const e=mkEq(n<6?pk[n%3]:pick(ids));if(n===0)e.star=3;if(n===1)e.star=2;if(n%4===3)e.rolls=[];save.col.push(e);save.eqBook[e.id]=1}}persist();toast('テスト用の武器・防具を10個ずつ受け取った')};
  $$('[data-lvu]').forEach(b=>b.onclick=()=>{const n=+b.dataset.lvu;save.lv+=n;save.free+=n*3;persist();openOpt();if(typeof renderHome==='function')renderHome()});
  $$('[data-vm]').forEach(b=>b.onclick=()=>{save.opt[b.dataset.vm]--;persist();applyVol();openOpt()});
  $$('[data-vp]').forEach(b=>b.onclick=()=>{save.opt[b.dataset.vp]++;persist();applyVol();openOpt()});

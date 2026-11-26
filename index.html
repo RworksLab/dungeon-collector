@@ -361,7 +361,7 @@ const SK={
  guard:{name:'鉄壁の構え',mp:3,desc:'次に受けるダメージを60%軽減（10ターン有効）'},
  counter:{name:'カウンター',mp:4,desc:'次に受ける近接攻撃に反撃する（10ターン有効）'},
  warp:{name:'瞬間移動',mp:4,desc:'正面に最大3マス、敵を飛び越えて移動'},
- barrier:{name:'聖なる結界',mp:6,noBook:1,desc:'このターンに受ける敵の攻撃（ボスの大技も含む）と火炎噴出口・溶岩のダメージを無効化する'}};
+ barrier:{name:'聖なる結界',mp:6,noBook:1,desc:'このターンに受ける全てのダメージを無効化。'}};
 const STS={poison:{n:'毒',c:'#d77bea',d:6},para:{n:'麻痺',c:'#ffcd75',d:3},sleep:{n:'睡眠',c:'#41a6f6',d:5},conf:{n:'混乱',c:'#ef7d57',d:5},burn:{n:'火傷',c:'#ff5a5a',d:4},frz:{n:'凍結',c:'#73eff7',d:3},curse:{n:'呪い',c:'#8d5dbd',d:12}};
 // cat: 回復/攻撃/妨害/探索・特殊　tg: self=自分 / front=正面に投げる / around=周囲8マス / room=見えている敵すべて
 const IT={
@@ -464,7 +464,7 @@ function mkEq(id){const d=EQ[id],[a,b]=RAR[d.r].k,n=a+rnd(b-a+1),rolls=[];
  return {id,uid:uidc++,star:1,plus:0,rolls}}
 const DEF={cleared:[],book:{},eqBook:{},inv:[{id:'herb',n:3}],skills:['spin','gale'],lv:1,exp:0,free:0,pts:{hp:0,atk:0,def:0,mp:0,luck:0},eq:null,col:[],stats:{runs:0,deaths:0,kills:0,turns:0,best:0,chests:0,elites:0,synth:0,runs3:0},bossKills:{},bestD:{},opt:{dpad:'right',bgm:5,se:7},chr:0,itBook:{herb:1},store:[],star:{},ach:{},title:''};
 let save=load();
-const VERSION='1.1.1',SAVE_VER=1;
+const VERSION='1.1.2',SAVE_VER=1;
 const DEV=(()=>{try{return location.hash==='#dev'}catch(e){return false}})();
 function load(){let s=null;try{s=JSON.parse(localStorage.getItem('dungeon_rpg_v3'))}catch(e){}
  s=Object.assign(structuredClone(DEF),s||{});s.stats=Object.assign(structuredClone(DEF.stats),s.stats);s.pts=Object.assign(structuredClone(DEF.pts),s.pts);s.opt=Object.assign(structuredClone(DEF.opt),s.opt);
@@ -1400,7 +1400,7 @@ function bossDown(e,mul){
  if(chance(.08*mul)){const own=Object.keys(EQ).filter(k=>EQ[k].src===e.type);dropAt(e.x,e.y,{k:'eq',v:mkEq(pick(own))})}
  G.st={x:19,y:15};G.exit=true;say('帰還の魔法陣が現れた。');
  if(first){if(!save.cleared.includes(d))save.cleared.push(d);if(d===5&&!save.skills.includes('barrier'))save.skills.push('barrier');persist();
-  const nx=DUN[d];setTimeout(()=>{if(!G||G.over)return;modal(`<h3 style="color:var(--gold)">${EN[e.type].name}を撃破！</h3><div class="unl">${nx?`<svg viewBox="0 0 24 24" shape-rendering="crispEdges"><rect x="1" y="3" width="22" height="21" fill="#566c86"/><path d="M5 24V12h2v-2h2V9h6v1h2v2h2v12z" fill="#ffcd75"/><rect x="2" y="9" width="2" height="2" fill="#ffcd75"/><rect x="20" y="9" width="2" height="2" fill="#ffcd75"/></svg><p>${nx.name}「${nx.theme}」が解放された！</p>`:(d===5?'<p>すべての迷宮を踏破した！</p><p>隠しダンジョン「終焉の深淵」の扉が開いた……！ ダンジョン選択から挑戦できます。</p><p>新しいスキル「聖なる結界」を習得した！（MP6：そのターンのダメージを無効化）</p>':'<p>すべての迷宮を踏破した！</p>')}</div><p>実績「${ACH.find(a=>a.id==='boss'+d).n}」を獲得しました。報酬の黄金の宝箱を開けてから、魔法陣で帰還しましょう。</p>`,[{label:'閉じる',pri:1}])},500)}
+  const nx=DUN[d];setTimeout(()=>{if(!G||G.over)return;modal(`<h3 style="color:var(--gold)">${EN[e.type].name}を撃破！</h3><div class="unl">${nx?`<svg viewBox="0 0 24 24" shape-rendering="crispEdges"><rect x="1" y="3" width="22" height="21" fill="#566c86"/><path d="M5 24V12h2v-2h2V9h6v1h2v2h2v12z" fill="#ffcd75"/><rect x="2" y="9" width="2" height="2" fill="#ffcd75"/><rect x="20" y="9" width="2" height="2" fill="#ffcd75"/></svg><p>${nx.name}「${nx.theme}」が解放された！</p>`:(d===5?'<p>すべての迷宮を踏破した！</p><p>隠しダンジョン「終焉の深淵」の扉が開いた……！ ダンジョン選択から挑戦できます。</p>':'<p>すべての迷宮を踏破した！</p>')}</div><p>報酬の黄金の宝箱を開けてから、魔法陣で帰還しましょう。</p>`,[{label:'閉じる',pri:1,fn:d===5?()=>setTimeout(()=>{if(G&&!G.over)modal(`<h3>新しいスキルを習得した！</h3><p>「${SK.barrier.name}」を習得した。</p><p>${SK.barrier.desc}（MP ${SK.barrier.mp}）</p>`,[{label:'閉じる',pri:1}])},150):null}])},500)}
 }
 function gainExp(x){save.exp+=x;let up=0;while(save.exp>=need(save.lv)){save.exp-=need(save.lv);save.lv++;save.free+=3;up++}
  if(up){se('lvup');say(`レベルアップ！ Lv ${save.lv}（ポイント +${up*3}）`);fx(P.x,P.y,'LvUP','#ffcd75');G.interrupt=true}}
